@@ -1,0 +1,11 @@
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.env
+.venv
+env/
+venv/
+archivos_temp/*
+!archivos_temp/.gitkeep
+.DS_Store
