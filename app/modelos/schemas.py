@@ -10,6 +10,7 @@ class CitaDetalle(BaseModel):
     texto: str
     valida: bool
     razon: Optional[str] = None
+    texto_completo: Optional[str] = None  # Texto original completo de la referencia
 
 class ResultadoAnalisis(BaseModel):
     cumple: bool
@@ -20,3 +21,4 @@ class ResultadoAnalisis(BaseModel):
     citas_invalidas: List[CitaDetalle] = []
     total_citas: int = 0
     archivo_reporte: Optional[str] = None
+    referencias_completas: List[str] = []  # Texto completo de TODAS las referencias extraídas

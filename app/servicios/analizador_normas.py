@@ -54,6 +54,10 @@ def analizar_norma_apa(texto: str, datos_grobid: Optional[Dict[str, Any]] = None
         referencias = extraer_referencias_de_xml(xml_content)
         citas_grobid = extraer_citas_de_xml(xml_content)
         
+        # Extraer TODAS las referencias del texto (sección bibliografía)
+        from app.api.rutas import extraer_referencias_del_texto
+        referencias_completas = extraer_referencias_del_texto(texto)
+        
         citas_validas = []
         citas_invalidas = []
         
@@ -61,11 +65,16 @@ def analizar_norma_apa(texto: str, datos_grobid: Optional[Dict[str, Any]] = None
         for ref in referencias:
             autores = ref.get("autores", [])
             year = ref.get("año")
+            texto_completo = ref.get("raw", "")  # Texto completo de GROBID
             
             if year and autores:
                 autor_str = autores[0] if autores else "Desconocido"
                 cita_texto = f"Ref: {autor_str}, {year}"
-                citas_validas.append(CitaDetalle(texto=cita_texto, valida=True))
+                citas_validas.append(CitaDetalle(
+                    texto=cita_texto, 
+                    valida=True, 
+                    texto_completo=texto_completo
+                ))
             else:
                 titulo = ref.get("titulo") or "Sin título"
                 razon = []
@@ -74,7 +83,12 @@ def analizar_norma_apa(texto: str, datos_grobid: Optional[Dict[str, Any]] = None
                 if not autores:
                     razon.append("Falta autor")
                 cita_texto = f"Ref: {str(titulo)[:50]}..."
-                citas_invalidas.append(CitaDetalle(texto=cita_texto, valida=False, razon="; ".join(razon)))
+                citas_invalidas.append(CitaDetalle(
+                    texto=cita_texto, 
+                    valida=False, 
+                    razon="; ".join(razon),
+                    texto_completo=texto_completo
+                ))
         
         # Validar citas en el texto extraídas por GROBID
         for cita in citas_grobid:
@@ -103,7 +117,8 @@ def analizar_norma_apa(texto: str, datos_grobid: Optional[Dict[str, Any]] = None
             detalles=detalles,
             citas_validas=citas_validas,
             citas_invalidas=citas_invalidas,
-            total_citas=total_citas
+            total_citas=total_citas,
+            referencias_completas=referencias_completas
         )
     
     # Fallback: Análisis con regex si GROBID no está disponible
@@ -154,6 +169,10 @@ def analizar_norma_apa(texto: str, datos_grobid: Optional[Dict[str, Any]] = None
     if not seccion_encontrada:
         errores.append(f"No se encontró sección de referencias. Palabras buscadas: {', '.join(PALABRAS_REFERENCIAS[:4])}")
     
+    # Extraer referencias completas del texto
+    from app.api.rutas import extraer_referencias_del_texto
+    referencias_completas = extraer_referencias_del_texto(texto)
+    
     total_citas = len(citas_validas) + len(citas_invalidas)
     cumple = len(errores) == 0
     detalles = f"Citas válidas: {len(citas_validas)}, Inválidas: {len(citas_invalidas)}. Sección: {palabra_encontrada if seccion_encontrada else 'No encontrada'}"
@@ -165,7 +184,8 @@ def analizar_norma_apa(texto: str, datos_grobid: Optional[Dict[str, Any]] = None
         detalles=detalles,
         citas_validas=citas_validas,
         citas_invalidas=citas_invalidas,
-        total_citas=total_citas
+        total_citas=total_citas,
+        referencias_completas=referencias_completas
     )
 
 def analizar_norma_ieee(texto: str, datos_grobid: Optional[Dict[str, Any]] = None) -> ResultadoAnalisis:
@@ -189,13 +209,22 @@ def analizar_norma_ieee(texto: str, datos_grobid: Optional[Dict[str, Any]] = Non
         referencias = extraer_referencias_de_xml(xml_content)
         citas_grobid = extraer_citas_de_xml(xml_content)
         
+        # Extraer TODAS las referencias del texto (sección bibliografía)
+        from app.api.rutas import extraer_referencias_del_texto
+        referencias_completas = extraer_referencias_del_texto(texto)
+        
         citas_validas = []
         citas_invalidas = []
         
         # Validar cada referencia extraída por GROBID
         for i, ref in enumerate(referencias, 1):
+            texto_completo = ref.get("raw", "")
             cita_texto = f"[{i}] Ref bibliográfica"
-            citas_validas.append(CitaDetalle(texto=cita_texto, valida=True))
+            citas_validas.append(CitaDetalle(
+                texto=cita_texto, 
+                valida=True,
+                texto_completo=texto_completo
+            ))
         
         # Validar citas en el texto extraídas por GROBID
         for cita in citas_grobid:
@@ -222,7 +251,8 @@ def analizar_norma_ieee(texto: str, datos_grobid: Optional[Dict[str, Any]] = Non
             detalles=detalles,
             citas_validas=citas_validas,
             citas_invalidas=citas_invalidas,
-            total_citas=total_citas
+            total_citas=total_citas,
+            referencias_completas=referencias_completas
         )
     
     # Fallback: Análisis con regex si GROBID no está disponible
@@ -271,6 +301,10 @@ def analizar_norma_ieee(texto: str, datos_grobid: Optional[Dict[str, Any]] = Non
     if not seccion_encontrada:
         errores.append(f"No se encontró sección de referencias. Palabras buscadas: {', '.join(PALABRAS_REFERENCIAS[:4])}")
     
+    # Extraer referencias completas del texto
+    from app.api.rutas import extraer_referencias_del_texto
+    referencias_completas = extraer_referencias_del_texto(texto)
+    
     total_citas = len(citas_validas) + len(citas_invalidas)
     cumple = len(errores) == 0
     detalles = f"Citas válidas: {len(citas_validas)}, Inválidas: {len(citas_invalidas)}. Sección: {palabra_encontrada if seccion_encontrada else 'No encontrada'}"
@@ -282,5 +316,6 @@ def analizar_norma_ieee(texto: str, datos_grobid: Optional[Dict[str, Any]] = Non
         detalles=detalles,
         citas_validas=citas_validas,
         citas_invalidas=citas_invalidas,
-        total_citas=total_citas
+        total_citas=total_citas,
+        referencias_completas=referencias_completas
     )

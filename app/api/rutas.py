@@ -5,6 +5,8 @@ from app.servicios.analizador_normas import analizar_norma_apa, analizar_norma_i
 from app.servicios.servicio_grobid import procesar_pdf_grobid
 from app.utils.archivo_helper import guardar_archivo_temporal, eliminar_archivo_temporal
 from app.utils.generador_reporte import generar_reporte_txt
+import re
+from typing import List
 
 router = APIRouter(prefix="/api", tags=["análisis"])
 
@@ -61,3 +63,165 @@ async def analizar_documento(norma: TipoNorma, archivo: UploadFile = File(...)):
     finally:
         if ruta_temp:
             eliminar_archivo_temporal(ruta_temp)
+
+def extraer_referencias_del_texto(texto: str) -> List[str]:
+    """Extrae SOLO referencias bibliográficas reales de la sección de bibliografía"""
+    referencias = []
+    
+    # Buscar sección de referencias (puede tener varios nombres)
+    patrones_seccion = [
+        r'(?:^|\n)\s*REFERENCIAS\s*\n(.*?)(?:\n\s*(?:ANEXO|AP[ÉE]NDICE|AUTOR|FIRMA|NOTA|FIN|=+)|\Z)',
+        r'(?:^|\n)\s*BIBLIOGRAF[IÍ]A\s*\n(.*?)(?:\n\s*(?:ANEXO|AP[ÉE]NDICE|AUTOR|FIRMA|NOTA|FIN|=+)|\Z)',
+        r'(?:^|\n)\s*REFERENCES\s*\n(.*?)(?:\n\s*(?:ANNEXE?|APPENDIX|AUTHOR|NOTE|END|=+)|\Z)',
+        r'(?:^|\n)\s*BIBLIOGRAPHY\s*\n(.*?)(?:\n\s*(?:ANNEXE?|APPENDIX|AUTHOR|NOTE|END|=+)|\Z)'
+    ]
+    
+    seccion_refs = None
+    for patron in patrones_seccion:
+        match = re.search(patron, texto, re.IGNORECASE | re.DOTALL)
+        if match:
+            seccion_refs = match.group(1)
+            break
+    
+    if not seccion_refs:
+        # Si no encuentra sección explícita, no extraer nada
+        return referencias
+    
+    # Limpiar líneas vacías múltiples
+    seccion_refs = re.sub(r'\n\s*\n+', '\n\n', seccion_refs)
+    
+    # Dividir por líneas y agrupar referencias
+    lineas = seccion_refs.split('\n')
+    ref_actual = ""
+    
+    for linea in lineas:
+        linea_original = linea
+        linea = linea.strip()
+        
+        # Saltar líneas vacías
+        if not linea:
+            continue
+        
+        # Detectar si termina la sección de referencias
+        if re.match(r'^(ANEXO|AP[ÉE]NDICE|AUTOR|FIRMA|TUTOR|NOTA|=+)', linea, re.IGNORECASE):
+            break
+        
+        # Detectar si es inicio de nueva referencia bibliográfica
+        # CRITERIOS ESTRICTOS:
+        # 1. Formato numerado: "1." o "[1]"
+        # 2. Apellido(s) seguido de inicial(es) o nombre completo
+        # 3. Debe tener patrón de referencia bibliográfica (autor, año, título)
+        
+        es_inicio_referencia = False
+        
+        # Formato numerado
+        if re.match(r'^\d+\.\s+[A-ZÑ][a-zá-úñü]+,?\s+[A-Z]\.?', linea):
+            es_inicio_referencia = True
+        # Formato con corchetes IEEE
+        elif re.match(r'^\[\d+\]\s+[A-ZÑ][a-zá-úñü]+', linea):
+            es_inicio_referencia = True
+        # Formato APA: Apellido, I., o Apellido, Nombre.
+        elif re.match(r'^[A-ZÑ][a-zá-úñü]+,\s+[A-Z]\.', linea):
+            es_inicio_referencia = True
+        # Formato: Apellido, A., & Apellido2, B.
+        elif re.match(r'^[A-ZÑ][a-zá-úñü]+,\s+[A-Z]\.\s*,?\s*(&|y)\s+[A-ZÑ]', linea):
+            es_inicio_referencia = True
+        # Organización como autor (ej: "Higher Education Policy Institute")
+        elif re.match(r'^[A-Z][a-z]+\s+[A-Z][a-z]+.*\.\s+\(\d{4}\)', linea):
+            es_inicio_referencia = True
+        
+        # NO es referencia si:
+        # - Es un párrafo normal (no tiene estructura de referencia)
+        # - Comienza con "En el", "El uso", "La necesidad", etc. (texto narrativo)
+        # - No contiene patrones típicos de referencias (año entre paréntesis, punto después del año, etc.)
+        
+        patron_texto_narrativo = re.match(
+            r'^(En\s+el|El\s+uso|La\s+necesidad|Este\s+art|Los\s+LLM|Según|Nota\.|La\s+última|La\s+ingenier)',
+            linea,
+            re.IGNORECASE
+        )
+        
+        if patron_texto_narrativo:
+            es_inicio_referencia = False
+        
+        # Debe tener indicadores de ser una referencia real:
+        # - Año en formato (YYYY) o YYYY. 
+        # - Puntos separando elementos
+        # - Título entrecomillado o cursiva
+        if es_inicio_referencia:
+            tiene_estructura_ref = (
+                re.search(r'\(\d{4}\)', linea) or  # Año entre paréntesis
+                re.search(r'\d{4}\)', linea) or    # Cierre de año
+                re.search(r',\s+\d{4}', linea) or  # Coma + año
+                re.search(r'\.\s+\(\d{4}', linea)  # Punto + año entre paréntesis
+            )
+            if not tiene_estructura_ref:
+                es_inicio_referencia = False
+        
+        if es_inicio_referencia:
+            # Guardar referencia anterior si existe
+            if ref_actual:
+                ref_limpia = ref_actual.strip()
+                # Última validación antes de agregar
+                if es_referencia_valida(ref_limpia):
+                    referencias.append(ref_limpia)
+            ref_actual = linea
+        else:
+            # Continuar referencia anterior
+            if ref_actual:
+                ref_actual += " " + linea
+    
+    # Agregar última referencia
+    if ref_actual:
+        ref_limpia = ref_actual.strip()
+        if es_referencia_valida(ref_limpia):
+            referencias.append(ref_limpia)
+    
+    # Eliminar duplicados manteniendo orden
+    referencias_unicas = []
+    referencias_vistas = set()
+    
+    for ref in referencias:
+        ref_normalizada = re.sub(r'\s+', ' ', ref.lower().strip())
+        if ref_normalizada not in referencias_vistas:
+            referencias_vistas.add(ref_normalizada)
+            referencias_unicas.append(ref)
+    
+    return referencias_unicas
+
+def es_referencia_valida(ref: str) -> bool:
+    """Valida que un texto sea realmente una referencia bibliográfica"""
+    # 1. Debe tener longitud mínima razonable
+    if len(ref) < 30:
+        return False
+    
+    # 2. Debe tener un año válido (1900-2099)
+    if not re.search(r'\b(19|20)\d{2}\b', ref):
+        return False
+    
+    # 3. Debe tener estructura de referencia (autor + año + algo más)
+    # Al menos 2 puntos o comas estructurales
+    puntos_estructurales = ref.count('.') + ref.count(',')
+    if puntos_estructurales < 2:
+        return False
+    
+    # 4. NO debe ser texto narrativo
+    if re.match(r'^(En\s+el|El\s+uso|La\s+necesidad|Este\s+art|Los\s+LLM|Según|La\s+última|La\s+ingenier)', ref, re.IGNORECASE):
+        return False
+    
+    # 5. NO debe contener frases típicas de texto corrido
+    frases_texto = [
+        'se ha convertido en',
+        'han demostrado que',
+        'este sistema',
+        'la implementación de',
+        'es lo que impulsa',
+        'operan prediciendo',
+        'compromete gravemente',
+        'resulta indispensable'
+    ]
+    for frase in frases_texto:
+        if frase in ref.lower():
+            return False
+    
+    return True

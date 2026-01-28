@@ -51,6 +51,14 @@ def generar_reporte_txt(resultado: ResultadoAnalisis, nombre_archivo: str) -> st
                     f.write(f"   Razón: {cita.razon}\n")
             f.write("\n")
         
+        # Agregar sección de REFERENCIAS COMPLETAS
+        if resultado.referencias_completas:
+            f.write("="*70 + "\n")
+            f.write(f"REFERENCIAS COMPLETAS EXTRAÍDAS ({len(resultado.referencias_completas)})\n")
+            f.write("="*70 + "\n\n")
+            for i, ref_completa in enumerate(resultado.referencias_completas, 1):
+                f.write(f"{i}. {ref_completa}\n\n")
+        
         f.write("="*70 + "\n")
         f.write("FIN DEL REPORTE\n")
         f.write("="*70 + "\n")
