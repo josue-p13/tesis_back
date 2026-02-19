@@ -7,7 +7,10 @@ def extraer_texto_pdf(ruta_archivo: str) -> str:
     with open(ruta_archivo, 'rb') as archivo:
         lector_pdf = pypdf.PdfReader(archivo)
         for pagina in lector_pdf.pages:
-            texto += pagina.extract_text()
+            texto_pagina = pagina.extract_text()
+            # Agregar saltos de línea para preservar separación entre párrafos
+            if texto_pagina:
+                texto += texto_pagina + "\n\n"
     return texto
 
 def extraer_texto_word(ruta_archivo: str) -> str:

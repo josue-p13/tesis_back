@@ -14,6 +14,8 @@ def generar_reporte_txt(resultado: ResultadoAnalisis, nombre_archivo: str) -> st
         
         f.write(f"Archivo analizado: {nombre_archivo}\n")
         f.write(f"Fecha: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}\n")
+        if resultado.estilo_detectado:
+            f.write(f"Estilo detectado: {resultado.estilo_detectado}\n")
         f.write(f"Norma evaluada: {resultado.norma.value.upper()}\n")
         f.write(f"Resultado: {'✓ CUMPLE' if resultado.cumple else '✗ NO CUMPLE'}\n")
         f.write("\n" + "-"*70 + "\n\n")
@@ -28,36 +30,16 @@ def generar_reporte_txt(resultado: ResultadoAnalisis, nombre_archivo: str) -> st
             f.write("\n")
         
         f.write("-"*70 + "\n")
-        f.write(f"ANÁLISIS DE CITAS\n")
+        f.write(f"REFERENCIAS EXTRAÍDAS DEL DOCUMENTO\n")
         f.write("-"*70 + "\n\n")
         
-        f.write(f"Total de citas encontradas: {resultado.total_citas}\n")
-        f.write(f"Citas válidas: {len(resultado.citas_validas)}\n")
-        f.write(f"Citas inválidas: {len(resultado.citas_invalidas)}\n\n")
+        f.write(f"Total de referencias: {len(resultado.citas_validas)}\n\n")
         
         if resultado.citas_validas:
-            f.write("CITAS VÁLIDAS:\n")
-            f.write("-"*70 + "\n")
             for i, cita in enumerate(resultado.citas_validas, 1):
-                f.write(f"{i}. {cita.texto}\n")
-            f.write("\n")
-        
-        if resultado.citas_invalidas:
-            f.write("CITAS INVÁLIDAS:\n")
-            f.write("-"*70 + "\n")
-            for i, cita in enumerate(resultado.citas_invalidas, 1):
-                f.write(f"{i}. {cita.texto}\n")
-                if cita.razon:
-                    f.write(f"   Razón: {cita.razon}\n")
-            f.write("\n")
-        
-        # Agregar sección de REFERENCIAS COMPLETAS
-        if resultado.referencias_completas:
-            f.write("="*70 + "\n")
-            f.write(f"REFERENCIAS COMPLETAS EXTRAÍDAS ({len(resultado.referencias_completas)})\n")
-            f.write("="*70 + "\n\n")
-            for i, ref_completa in enumerate(resultado.referencias_completas, 1):
-                f.write(f"{i}. {ref_completa}\n\n")
+                f.write(f"{i}. {cita.texto}\n\n")
+        else:
+            f.write("No se encontraron referencias en el documento.\n\n")
         
         f.write("="*70 + "\n")
         f.write("FIN DEL REPORTE\n")
