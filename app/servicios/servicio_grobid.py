@@ -2,6 +2,7 @@ import httpx
 from typing import Optional, Dict, Any, List
 import re
 import xml.etree.ElementTree as ET
+import asyncio
 
 GROBID_URL = "http://localhost:8070"
 
@@ -172,3 +173,223 @@ def normalizar_referencia(ref: Dict[str, Any]) -> str:
         partes.append(str(ref["año"]))
     
     return ", ".join(partes) if partes else ""
+
+async def procesar_cita_grobid(texto_cita: str) -> Dict[str, Any]:
+    """
+    Envía una cita individual a GROBID para estructurarla en campos separados.
+    
+    Args:
+        texto_cita: Texto completo de la referencia bibliográfica
+        
+    Returns:
+        Dict con campos estructurados: autores, titulo, año, doi, etc.
+    """
+    # Limpiar el número de referencia [1], [2], etc.
+    texto_limpio = re.sub(r'^\[\d+\]\s*', '', texto_cita)
+    
+    print(f"[GROBID-CITA] Procesando: {texto_limpio[:80]}...")
+    
+    try:
+        async with httpx.AsyncClient(timeout=30.0) as client:
+            response = await client.post(
+                f"{GROBID_URL}/api/processCitation",
+                data={
+                    'citations': texto_limpio,
+                    'consolidateCitations': '1'
+                }
+            )
+            
+            print(f"[GROBID-CITA] Status: {response.status_code}")
+            
+            if response.status_code == 200:
+                xml_content = response.text
+                print(f"[GROBID-CITA] XML length: {len(xml_content)} chars")
+                
+                if not xml_content or len(xml_content.strip()) < 50:
+                    return {
+                        "status": "error",
+                        "texto_original": texto_cita,
+                        "motivo": "Respuesta vacía de GROBID (XML muy corto)"
+                    }
+                
+                # Guardar XML para debug
+                if "<biblStruct" not in xml_content:
+                    print(f"[GROBID-CITA] ⚠️ WARNING: No se encontró <biblStruct> en el XML")
+                    print(f"[GROBID-CITA] XML recibido: {xml_content[:500]}")
+                
+                resultado = parsear_cita_xml(xml_content, texto_cita, texto_limpio)
+                
+                if resultado.get("status") == "success":
+                    print(f"[GROBID-CITA] ✓ Éxito - Autores: {len(resultado.get('autores', []))}, Título: {bool(resultado.get('titulo'))}")
+                else:
+                    print(f"[GROBID-CITA] ✗ Error: {resultado.get('motivo', 'Sin motivo')}")
+                
+                return resultado
+            else:
+                error_text = response.text
+                motivo = f"GROBID retornó HTTP {response.status_code}"
+                if error_text:
+                    motivo += f": {error_text[:200]}"
+                print(f"[GROBID-CITA] ✗ {motivo}")
+                return {
+                    "status": "error",
+                    "texto_original": texto_cita,
+                    "motivo": motivo
+                }
+    except asyncio.TimeoutError:
+        motivo = "Timeout de 30 segundos al esperar respuesta de GROBID"
+        print(f"[GROBID-CITA] ✗ {motivo}")
+        return {
+            "status": "error",
+            "texto_original": texto_cita,
+            "motivo": motivo
+        }
+    except Exception as e:
+        motivo = f"Excepción al conectar con GROBID: {type(e).__name__} - {str(e)}"
+        print(f"[GROBID-CITA] ✗ {motivo}")
+        return {
+            "status": "error",
+            "texto_original": texto_cita,
+            "motivo": motivo
+        }
+
+def parsear_cita_xml(xml_str: str, texto_original: str, texto_limpio: str = None) -> Dict[str, Any]:
+    """Parsea el XML de GROBID y extrae campos estructurados de la cita"""
+    try:
+        root = ET.fromstring(xml_str)
+        
+        resultado = {
+            "status": "success",
+            "autores": [],
+            "titulo": None,
+            "año": None,
+            "revista": None,
+            "volumen": None,
+            "numero": None,
+            "paginas": None,
+            "doi": None,
+            "editorial": None,
+            "ciudad": None,
+            "tipo": None,
+            "texto_original": texto_original
+        }
+        
+        # En processCitation, <biblStruct> es el elemento root (sin namespace TEI)
+        biblstruct = root if root.tag in ['biblStruct', '{http://www.tei-c.org/ns/1.0}biblStruct'] else None
+        
+        if biblstruct is None:
+            # Buscar dentro del árbol por si acaso
+            biblstruct = root.find('.//biblStruct')
+            if biblstruct is None:
+                elementos = [elem.tag for elem in root.iter()]
+                elementos_unicos = list(set(elementos))[:10]
+                return {
+                    "status": "error",
+                    "texto_original": texto_original,
+                    "motivo": f"No se encontró <biblStruct>. Root tag: {root.tag}. Elementos: {', '.join(elementos_unicos)}"
+                }
+        
+        # Extraer autores (sin namespace ya que el XML no lo usa)
+        for author in biblstruct.findall('.//author'):
+            persname = author.find('.//persName')
+            if persname is not None:
+                apellido = persname.find('surname')
+                nombre = persname.find('forename[@type="first"]')
+                
+                autor_completo = ""
+                if apellido is not None and apellido.text:
+                    autor_completo = apellido.text.strip()
+                if nombre is not None and nombre.text:
+                    inicial = nombre.text.strip()[0] + "." if nombre.text.strip() else ""
+                    if autor_completo:
+                        autor_completo += f", {inicial}"
+                    else:
+                        autor_completo = inicial
+                
+                if autor_completo:
+                    resultado["autores"].append(autor_completo)
+        
+        # Extraer título
+        titulo_elem = biblstruct.find('.//title[@level="a"]')
+        if titulo_elem is not None and titulo_elem.text:
+            resultado["titulo"] = titulo_elem.text.strip()
+        
+        if not resultado["titulo"]:
+            titulo_elem = biblstruct.find('.//title[@level="m"]')
+            if titulo_elem is not None and titulo_elem.text:
+                resultado["titulo"] = titulo_elem.text.strip()
+                resultado["tipo"] = "Libro"
+        
+        # Extraer año
+        fecha_elem = biblstruct.find('.//date[@type="published"]')
+        if fecha_elem is not None:
+            when = fecha_elem.get('when')
+            if when:
+                resultado["año"] = when[:4] if len(when) >= 4 else when
+        
+        # Extraer revista/journal
+        revista_elem = biblstruct.find('.//title[@level="j"]')
+        if revista_elem is not None and revista_elem.text:
+            resultado["revista"] = revista_elem.text.strip()
+        
+        # Extraer volumen
+        volumen_elem = biblstruct.find('.//biblScope[@unit="volume"]')
+        if volumen_elem is not None and volumen_elem.text:
+            resultado["volumen"] = volumen_elem.text.strip()
+        
+        # Extraer número
+        numero_elem = biblstruct.find('.//biblScope[@unit="issue"]')
+        if numero_elem is not None and numero_elem.text:
+            resultado["numero"] = numero_elem.text.strip()
+        
+        # Extraer páginas
+        paginas_elem = biblstruct.find('.//biblScope[@unit="page"]')
+        if paginas_elem is not None:
+            from_page = paginas_elem.get('from')
+            to_page = paginas_elem.get('to')
+            if from_page and to_page:
+                resultado["paginas"] = f"{from_page}-{to_page}"
+            elif from_page:
+                resultado["paginas"] = from_page
+        
+        # Extraer DOI
+        doi_elem = biblstruct.find('.//idno[@type="DOI"]')
+        if doi_elem is not None and doi_elem.text:
+            resultado["doi"] = doi_elem.text.strip()
+        
+        # Extraer editorial
+        editorial_elem = biblstruct.find('.//publisher')
+        if editorial_elem is not None and editorial_elem.text:
+            resultado["editorial"] = editorial_elem.text.strip()
+        
+        # Extraer ciudad
+        ciudad_elem = biblstruct.find('.//pubPlace')
+        if ciudad_elem is not None and ciudad_elem.text:
+            resultado["ciudad"] = ciudad_elem.text.strip()
+        
+        # Verificar que al menos tengamos autor o título
+        if not resultado["autores"] and not resultado["titulo"]:
+            return {
+                "status": "error",
+                "texto_original": texto_original,
+                "motivo": "GROBID procesó el XML pero no se pudo extraer ni autor ni título (posiblemente formato incorrecto)"
+            }
+        
+        return resultado
+        
+    except ET.ParseError as e:
+        # Guardar XML problemático para debug
+        xml_preview = xml_str[:500].replace('\n', ' ')
+        return {
+            "status": "error",
+            "texto_original": texto_original,
+            "motivo": f"XML malformado retornado por GROBID. Error: {str(e)}. Vista previa: {xml_preview}"
+        }
+    except Exception as e:
+        import traceback
+        tb = traceback.format_exc()
+        return {
+            "status": "error",
+            "texto_original": texto_original,
+            "motivo": f"Excepción al parsear XML: {type(e).__name__} - {str(e)}. Traceback: {tb[:300]}"
+        }

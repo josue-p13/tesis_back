@@ -33,7 +33,6 @@ async def analizar_documento(
         datos_grobid = None
         ruta_solo_refs = None
         if archivo.filename.endswith('.pdf'):
-            # 1. IDENTIFICAR PÁGINA DE INICIO DE REFERENCIAS usando PyMuPDF
             try:
                 import fitz
                 doc = fitz.open(ruta_temp)
@@ -123,9 +122,26 @@ async def analizar_documento(
             resultado.detalles = advertencia + resultado.detalles
             print(f"[ADVERTENCIA] {advertencia}")
 
-        # Generar reporte TXT
-        ruta_reporte = generar_reporte_txt(resultado, archivo.filename)
-        resultado.archivo_reporte = ruta_reporte
+        # PROCESAR REFERENCIAS CON GROBID para estructurarlas
+        print(f"\n[GROBID-PROCESAMIENTO] Procesando {len(resultado.referencias_completas)} referencias...")
+        referencias_estructuradas = []
+        
+        from app.servicios.servicio_grobid import procesar_cita_grobid
+        
+        for i, ref_texto in enumerate(resultado.referencias_completas, 1):
+            print(f"[GROBID] Procesando referencia {i}/{len(resultado.referencias_completas)}")
+            ref_estructurada = await procesar_cita_grobid(ref_texto)
+            referencias_estructuradas.append(ref_estructurada)
+        
+        print(f"[GROBID-PROCESAMIENTO] Completado. {len(referencias_estructuradas)} referencias estructuradas\n")
+        
+        # Generar AMBOS reportes TXT
+        from app.utils.generador_reporte import generar_reporte_estructurado
+        
+        ruta_reporte_original = generar_reporte_txt(resultado, archivo.filename)
+        ruta_reporte_estructurado = generar_reporte_estructurado(referencias_estructuradas, archivo.filename)
+        
+        resultado.archivo_reporte = ruta_reporte_original
 
         # Imprimir resultado en consola (solo si resultado existe)
         print(f"\n{'='*70}")
@@ -141,7 +157,9 @@ async def analizar_documento(
             print(f"ERRORES ENCONTRADOS:")
             for error in resultado.errores:
                 print(f"  - {error}")
-        print(f"REPORTE GENERADO: {ruta_reporte}")
+        print(f"\nREPORTES GENERADOS:")
+        print(f"  📄 Original: {ruta_reporte_original}")
+        print(f"  📊 Estructurado: {ruta_reporte_estructurado}")
         print(f"{'='*70}\n")
         
         return resultado

@@ -192,9 +192,9 @@ def analizar_norma_ieee(texto: str, datos_grobid: Optional[Dict[str, Any]] = Non
     citas_validas = []
     citas_invalidas = []
     
-    for i, ref_texto in enumerate(referencias_completas, 1):
+    for ref_texto in referencias_completas:
         citas_validas.append(CitaDetalle(
-            texto=f"[{i}] {ref_texto}",
+            texto=ref_texto,
             valida=True
         ))
     
