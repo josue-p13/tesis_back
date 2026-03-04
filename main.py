@@ -7,7 +7,7 @@ app.include_router(rutas.router)
 
 @app.get("/")
 def raiz():
-    return {"mensaje": "API de análisis de normas APA e IEEE"}
+    return {"mensaje": "API de análisis de normas APA, Harvard e IEEE"}
 
 if __name__ == "__main__":
     import uvicorn

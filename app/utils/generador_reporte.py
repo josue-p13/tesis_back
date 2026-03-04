@@ -2,7 +2,6 @@ from datetime import datetime
 from pathlib import Path
 from app.modelos.schemas import ResultadoAnalisis
 from typing import List, Dict, Any
-import os
 
 def generar_reporte_txt(resultado: ResultadoAnalisis, nombre_archivo: str) -> str:
     timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
@@ -46,128 +45,6 @@ def generar_reporte_txt(resultado: ResultadoAnalisis, nombre_archivo: str) -> st
         f.write("="*70 + "\n")
         f.write("FIN DEL REPORTE\n")
         f.write("="*70 + "\n")
-    
-    return str(ruta_reporte)
-
-def generar_reporte_estructurado(referencias_estructuradas: List[Dict[str, Any]], nombre_archivo: str) -> str:
-    """Genera el segundo archivo TXT con referencias estructuradas por GROBID"""
-    timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-    nombre_reporte = f"reporte_{nombre_archivo}_{timestamp}_estructurado.txt"
-    ruta_reporte = Path("archivos_temp") / nombre_reporte
-    
-    # Separar exitosas y fallidas
-    exitosas = [r for r in referencias_estructuradas if r.get("status") == "success"]
-    fallidas = [r for r in referencias_estructuradas if r.get("status") == "error"]
-    
-    lineas = []
-    lineas.append("=" * 70)
-    lineas.append("REFERENCIAS ESTRUCTURADAS POR GROBID")
-    lineas.append("=" * 70)
-    lineas.append("")
-    lineas.append(f"Archivo analizado: {nombre_archivo}")
-    lineas.append(f"Fecha: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
-    lineas.append(f"Total de referencias procesadas: {len(referencias_estructuradas)}")
-    lineas.append(f"Referencias estructuradas exitosamente: {len(exitosas)}")
-    lineas.append(f"Referencias con errores: {len(fallidas)}")
-    lineas.append("")
-    lineas.append("-" * 70)
-    
-    # Sección de referencias exitosas
-    if exitosas:
-        lineas.append("")
-        lineas.append("REFERENCIAS ESTRUCTURADAS EXITOSAMENTE")
-        lineas.append("-" * 70)
-        lineas.append("")
-        
-        for i, ref in enumerate(exitosas, 1):
-            lineas.append(f"REFERENCIA #{i}")
-            lineas.append("-" * 70)
-            
-            # Autores
-            autores = ref.get("autores", [])
-            if autores:
-                lineas.append(f"Autores: {', '.join(autores)}")
-            
-            # Título
-            titulo = ref.get("titulo")
-            if titulo:
-                lineas.append(f"Título: {titulo}")
-            
-            # Año
-            anio = ref.get("año")
-            if anio:
-                lineas.append(f"Año: {anio}")
-            
-            # Revista
-            revista = ref.get("revista")
-            if revista:
-                lineas.append(f"Revista/Journal: {revista}")
-            
-            # Volumen
-            volumen = ref.get("volumen")
-            if volumen:
-                lineas.append(f"Volumen: {volumen}")
-            
-            # Número
-            numero = ref.get("numero")
-            if numero:
-                lineas.append(f"Número: {numero}")
-            
-            # Páginas
-            paginas = ref.get("paginas")
-            if paginas:
-                lineas.append(f"Páginas: {paginas}")
-            
-            # DOI
-            doi = ref.get("doi")
-            if doi:
-                lineas.append(f"DOI: {doi}")
-            
-            # Editorial
-            editorial = ref.get("editorial")
-            if editorial:
-                lineas.append(f"Editorial: {editorial}")
-            
-            # Ciudad
-            ciudad = ref.get("ciudad")
-            if ciudad:
-                lineas.append(f"Ciudad: {ciudad}")
-            
-            # Tipo
-            tipo = ref.get("tipo")
-            if tipo:
-                lineas.append(f"Tipo: {tipo}")
-            
-            # Texto original
-            lineas.append("")
-            lineas.append("Texto original:")
-            lineas.append(f"{ref.get('texto_original', 'N/A')}")
-            lineas.append("")
-    
-    # Sección de referencias con errores
-    if fallidas:
-        lineas.append("")
-        lineas.append("REFERENCIAS CON ERRORES AL ESTRUCTURAR")
-        lineas.append("-" * 70)
-        lineas.append("")
-        
-        for i, ref in enumerate(fallidas, 1):
-            lineas.append(f"REFERENCIA CON ERROR #{i}")
-            lineas.append("-" * 70)
-            lineas.append(f"Motivo: {ref.get('motivo', 'Desconocido')}")
-            lineas.append("Texto original:")
-            lineas.append(f"{ref.get('texto_original', 'N/A')}")
-            lineas.append("")
-    
-    lineas.append("=" * 70)
-    lineas.append("FIN DEL REPORTE ESTRUCTURADO")
-    lineas.append("=" * 70)
-    
-    with open(ruta_reporte, "w", encoding="utf-8") as f:
-        f.write("\n".join(lineas))
-    
-    print(f"[REPORTE] Archivo estructurado generado: {ruta_reporte}")
-    print(f"[REPORTE] Exitosas: {len(exitosas)}, Fallidas: {len(fallidas)}")
     
     return str(ruta_reporte)
 
