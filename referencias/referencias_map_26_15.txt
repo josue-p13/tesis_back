@@ -1,0 +1,471 @@
+================================================================================
+REFERENCIAS BIBLIOGRÁFICAS EXTRAÍDAS
+================================================================================
+
+Estilo de citación detectado: Harvard
+Harvard Style - Común en Reino Unido y ciencias sociales
+
+Total de referencias: 44
+Fecha de generación: 2026-03-03 20:44:32
+================================================================================
+
+[1] ---------------------------------------------------------------------------
+Texto original: Andersen, R., Francez, A.J., Rochefort, L. (2006) The physicochemical and microbiological status of a restored bog in Quebec: Identification of relevant criteria to monitor success. Soil Biology & Biochemistry, 38, 1375-1387. doi:10.1016/ j.soilbio.2005.10.012
+
+Autores: R Andersen, A Francez, L Rochefort
+Título: The physicochemical and microbiological status of a restored bog in Quebec: Identification of relevant criteria to monitor success
+Publicación: Soil Biology & Biochemistry
+Año: 2006
+Volumen: 38
+Páginas: 1375-1387
+DOI: 10.1016/j.soilbio.2005.10.012
+
+[2] ---------------------------------------------------------------------------
+Texto original: Baird, A.J., Morris, P.J., Belyea, L.R. (2012) The DigiBog peatland development model 1: rationale, conceptual model, and hydrological basis. Ecohydrology, 5, 242-255. doi:10.1002/ eco.230
+
+Autores: A Baird, P Morris, L Belyea
+Título: The DigiBog peatland development model 1: rationale, conceptual model, and hydrological basis
+Publicación: Ecohydrology
+Año: 2012
+Volumen: 5
+Páginas: 242-255
+DOI: 10.1002/eco.230
+
+[3] ---------------------------------------------------------------------------
+Texto original: Barber, K.E., Chambers, F.M., Maddy, D., Stoneman, R., Brew, J.S. (1994) A sensitive high- resolution record of late Holocene climatic change from a raised bog in northern England. The Holocene, 4, 198-205. doi:10.1177/0959683694 00400209
+
+Autores: K Barber, F Chambers, D Maddy, R Stoneman, J Brew
+Título: A sensitive high-resolution record of late Holocene climatic change from a raised bog in northern England
+Publicación: The Holocene
+Año: 1994
+Volumen: 4
+Páginas: 198-205
+DOI: 10.1177/095968369400400209
+
+[4] ---------------------------------------------------------------------------
+Texto original: Belyea, L.R. (2009) Nonlinear dynamics of peatlands and potential feedbacks on the climate system. In: Baird, A.J., Belyea, L.R., Comas, X., Reeve, A.S., Slater, L.D. (eds.) Carbon Cycling in Northern Peatlands, Geophysical Monograph 184, American Geophysical Union, Washington DC, 5-18.
+
+Autores: L Belyea
+Título: Nonlinear dynamics of peatlands and potential feedbacks on the climate system
+Publicación: Carbon Cycling in Northern Peatlands
+Año: 2009
+Volumen: 184
+Páginas: 5-18
+
+[5] ---------------------------------------------------------------------------
+Texto original: Bradford, S.C. (1934) Sources of information on specific subjects. Engineering, 137, 85-86.
+
+Autores: S Bradford
+Título: Sources of information on specific subjects. Engineering
+Publicación: Sources of information on specific subjects. Engineering
+Año: 1934
+Volumen: 137
+Páginas: 85-86
+
+[6] ---------------------------------------------------------------------------
+Texto original: Bragazza, L., Freeman, C., Jones, T., Rydin, H., Limpens, J., Fenner, N., Ellis, T., Gerdol, R., Hájek, M., Hájek, T., Iacumin, P., Kutnar, L., Tahvanainen, T., Toberman, H. (2006) Atmospheric nitrogen deposition promotes carbon loss from peat bogs. Proceedings of the National Academy of Sciences, 103, 19386- 19389. doi:10.1073/pnas.0606629104
+
+Autores: L Bragazza, C Freeman, T Jones, H Rydin, J Limpens, N Fenner, T Ellis, R Gerdol, M Hájek, T Hájek, P Iacumin, L Kutnar, T Tahvanainen, H Toberman
+Título: Atmospheric nitrogen deposition promotes carbon loss from peat bogs
+Publicación: Proceedings of the National Academy of Sciences
+Año: 2006
+Volumen: 103
+Páginas: 19386-19389
+DOI: 10.1073/pnas.0606629104
+
+[7] ---------------------------------------------------------------------------
+Texto original: Carmel, Y., Kent, R., Bar-Massada, A., Blank, L., Liberzon, J., Nezer, O., Sapir, G., Federman, R. (2013) Trends in ecological research during the last three decades -a systematic review. PLoS ONE, 8, e59813. doi:10.1371/journal.pone. 0059813
+
+Autores: Y Carmel, R Kent, A Bar-Massada, L Blank, J Liberzon, O Nezer, G Sapir, R Federman
+Título: Trends in ecological research during the last three decades -a systematic review
+Publicación: PLoS ONE
+Año: 2013
+Volumen: 8
+DOI: 10.1371/journal.pone.0059813
+
+[8] ---------------------------------------------------------------------------
+Texto original: Charman, D.J., Warner, B.G. (1997) The ecology of testate amoebae (Protozoa: Rhizopoda) in oceanic peatlands in Newfoundland, Canada: modelling hydrological relationships for paleoenvironmental reconstruction. Ecoscience, 4, 555-562.
+
+Autores: D Charman, B Warner
+Título: The ecology of testate amoebae (Protozoa: Rhizopoda) in oceanic peatlands in Newfoundland, Canada: modelling hydrological relationships for paleoenvironmental reconstruction
+Publicación: The ecology of testate amoebae (Protozoa: Rhizopoda) in oceanic peatlands in Newfoundland, Canada: modelling hydrological relationships for paleoenvironmental reconstruction
+Año: 1997
+Volumen: 4
+Páginas: 555-562
+
+[9] ---------------------------------------------------------------------------
+Texto original: Christensen, T.R., Johansson, T., Åkerman, H.J., Mastepanov, M., Malmer, N., Friborg, T., Crill, P., Svensson, B.H. (2004) Thawing sub-arctic permafrost: Effects on vegetation and methane emissions. Geophysical Research Letters, 31. doi:10.1029/2003gl018680
+
+Autores: T Christensen, T Johansson, H Åkerman, M Mastepanov, N Malmer, T Friborg, P Crill, B Svensson
+Título: Thawing sub-arctic permafrost: Effects on vegetation and methane emissions
+Publicación: Geophysical Research Letters
+Año: 2004
+DOI: 10.1029/2003gl018680
+
+[10] ---------------------------------------------------------------------------
+Texto original: Dargie, G.C., Lewis, S.L., Lawson, I.T., Mitchard, E.T.A., Page, S.E., Bocko, Y.E., Ifo, S.A. (2017) Age, extent and carbon storage of the central Congo Basin peatland complex. Nature, 542, 86- 90. doi:10.1038/nature21048
+
+Autores: G Dargie, S Lewis, I Lawson, E Mitchard, S Page, Y Bocko, S Ifo
+Título: Age, extent and carbon storage of the central Congo Basin peatland complex
+Publicación: Nature
+Año: 2017
+Volumen: 542
+Páginas: 86-90
+DOI: 10.1038/nature21048
+
+[11] ---------------------------------------------------------------------------
+Texto original: de Groot, R.S., Wilson, M.A., Boumans, R.M.J. (2002) A typology for the classification, description and valuation of ecosystem functions, goods and services. Ecological Economics, 41, 393-408. doi:10.1016/S0921-8009(02)00089-7
+
+Autores: R De Groot, M Wilson, R Boumans
+Título: A typology for the classification, description and valuation of ecosystem functions, goods and services
+Publicación: Ecological Economics
+Año: 2002
+Volumen: 41
+Páginas: 393-408
+DOI: 10.1016/S0921-8009(02)00089-7
+
+[12] ---------------------------------------------------------------------------
+Texto original: De Vleeschouwer, F., Vanneste, H., Mauquoy, D., Piotrowska, N., Torrejon, F., Roland, T., Stein, A., Le Roux, G. (2014) Emissions from pre- Hispanic metallurgy in the South American atmosphere. PLoS ONE, 9(10), e111315, 13 pp. doi:10.1371/journal.pone.0111315
+
+Autores: De, F Vleeschouwer, H Vanneste, D Mauquoy, N Piotrowska, F Torrejon, T Roland, A Stein, G Le Roux
+Título: Emissions from pre-Hispanic metallurgy in the South American atmosphere
+Publicación: PLoS ONE
+Año: 2014
+Volumen: 9
+DOI: 10.1371/journal.pone.0111315
+
+[13] ---------------------------------------------------------------------------
+Texto original: Dommain, R., Couwenberg, J., Joosten, H. (2011) Development and carbon sequestration of tropical peat domes in south-east Asia: links to post- glacial sea-level changes and Holocene climate variability. Quaternary Science Reviews, 30, 999- 1010. doi:10.1016/j.quascirev.2011.01.018
+
+Autores: R Dommain, J Couwenberg, H Joosten
+Título: Development and carbon sequestration of tropical peat domes in south-east Asia: links to postglacial sea-level changes and Holocene climate variability
+Publicación: Quaternary Science Reviews
+Año: 2011
+Volumen: 30
+Páginas: 999-1010
+DOI: 10.1016/j.quascirev.2011.01.018
+
+[14] ---------------------------------------------------------------------------
+Texto original: Frolking, S.E., Roulet, N.T. (2007) Holocene radiative forcing impact of northern peatland carbon accumulation and methane emissions. Global Change Biology, 13, 1079-1088. doi:10.1111/j.1365-2486.2007.01339.x
+
+Autores: S Frolking, N Roulet
+Título: Holocene radiative forcing impact of northern peatland carbon accumulation and methane emissions
+Publicación: Global Change Biology
+Año: 2007
+Volumen: 13
+Páginas: 1079-1088
+DOI: 10.1111/j.1365-2486.2007.01339.x
+
+[15] ---------------------------------------------------------------------------
+Texto original: Frolking, S., Roulet, N.T., Tuittila, E., Bubier, J.L., Quillet, A., Talbot, J., Richard, P. (2010) A new model of Holocene peatland net primary production, decomposition, water balance, and peat accumulation. Earth System Dynamics, 1, 1-21. doi:10.5194/esd-1-1-2010
+
+Autores: S Frolking, N Roulet, E Tuittila, J Bubier, A Quillet, J Talbot, P Richard
+Título: A new model of Holocene peatland net primary production, decomposition, water balance, and peat accumulation
+Publicación: Earth System Dynamics
+Año: 2010
+Volumen: 1
+Páginas: 1-21
+DOI: 10.5194/esd-1-1-2010
+
+[16] ---------------------------------------------------------------------------
+Texto original: Gallego-Sala, A.V., Charman, D.J., Brewer, S., Page, S.E., Prentice, I.C., Friedlingstein, P., Moreton, S., Amesbury, M.J., Beilman, D.W., Björck, S., Blyakharchuk, T., Bochicchio, C., Booth, R.K., Bunbury, J., Camill, P., Carless, D., Chimner, R.A., Clifford, M., Cressey, E., Courtney- Mustaphi, C., De Vleeschouwer, F., de Jong, R., Fialkiewicz-Koziel, B., Finkelstein, S.A., Garneau, M., Githumbi, E., Hribjlan, J., Holmquist, J., Hughes, P.D.M., Jones, C., Jones, M.C., Karofeld, E., Klein, E.S., Kokfelt, U., Korhola, A., Lacourse, T., Le Roux, G., Lamentowicz, M., Large, D., Lavoie, M., Loisel, J., Mackay, H., MacDonald, G.M., Makila, M., Magnan, G., Marchant, R., Marcisz, K., Martínez Cortizas, A., Massa, C., Mathijssen, P., Mauquoy, D., Mighall, T., Mitchell, F.J.G., Moss, P., Nichols, J., Oksanen, P.O., Orme, L., Packalen, M.S., Robinson, S., Roland, T.P., Sanderson, N.K., Sannel, A.B.K., Silva-Sánchez, N., Steinberg, N., Swindles, G.T., Turner, T.E., Uglow, J., Väliranta, M., van Bellen, S., van der Linden, M., van Geel, B., Wang, G., Yu, Z., Zaragoza-Castells, J., Zhao, Y. (2018) Latitudinal limits to the predicted increase of the peatland carbon sink with warming. Nature Climate Change, 8, 907-913. doi:10.1038/s41558-018- 0271-1
+
+Autores: A Gallego-Sala, D Charman, S Brewer, S Page, I Prentice, P Friedlingstein, S Moreton, M Amesbury, D Beilman, S Björck, T Blyakharchuk, C Bochicchio, R Booth, J Bunbury, P Camill, D Carless, R Chimner, M Clifford, E Cressey, C Courtney-Mustaphi, F De Vleeschouwer, R De Jong, B Fialkiewicz-Koziel, S Finkelstein, M Garneau, E Githumbi, J Hribjlan, J Holmquist, P Hughes, C Jones, M Jones, E Karofeld, E Klein, U Kokfelt, A Korhola, T Lacourse, G Le Roux, M Lamentowicz, D Large, M Lavoie, J Loisel, H Mackay, G Macdonald, M Makila, G Magnan, R Marchant, K Marcisz, A Martínez Cortizas, C Massa, P Mathijssen, D Mauquoy, T Mighall, F Mitchell, P Moss, J Nichols, P Oksanen, L Orme, M Packalen, S Robinson, T Roland, N Sanderson, A Sannel, N Silva-Sánchez, N Steinberg, G Swindles, T Turner, J Uglow, M Väliranta, S Van Bellen, M Van Der Linden, B Van Geel, G Wang, Z Yu, J Zaragoza-Castells, Y Zhao
+Título: Nature Climate Change
+Publicación: Nature Climate Change
+Año: 2018
+Volumen: 8
+Páginas: 907-913
+DOI: 10.1038/s41558-018-0271-1
+
+[17] ---------------------------------------------------------------------------
+Texto original: Gingras, Y. (2016) Bibliometrics and Research Evaluation: Uses and Abuses. The MIT Press, Cambridge MA, USA, 136 pp.
+
+Autores: Y Gingras
+Título: Bibliometrics and Research Evaluation: Uses and Abuses
+Publicación: Bibliometrics and Research Evaluation: Uses and Abuses
+Año: 2016
+
+[18] ---------------------------------------------------------------------------
+Texto original: Gorham, E. (1991) Northern peatlands: role in the carbon cycle and probable responses to climatic warming. Ecological Applications, 1, 182-195. doi:10.2307/1941811
+
+Autores: E Gorham
+Título: Northern peatlands: role in the carbon cycle and probable responses to climatic warming
+Publicación: Ecological Applications
+Año: 1991
+Volumen: 1
+Páginas: 182-195
+DOI: 10.2307/1941811
+
+[19] ---------------------------------------------------------------------------
+Texto original: Hodgkins, S.B., Richardson, C.J., Dommain, R., Wang, H., Glaser, P.H., Verbeke, B., Winkler, B.R., Cobb, A.R., Rich, V.I., Missilmani, M., Flanagan, N., Ho, M., Hoyt, A.M., Harvey, C.F., Vining, S.R., Hough, M.A., Moore, T.R., Richard, P.J.H., De La Cruz, F.B., Toufaily, J., Hamdan, R., Cooper, W.T., Chanton, J.P. (2018) Tropical peatland carbon storage linked to global latitudinal trends in peat recalcitrance. Nature Communications, 9, 3640, 13 pp. doi:10.1038/ s41467-018-06050-2
+
+Autores: S Hodgkins, C Richardson, R Dommain, H Wang, P Glaser, B Verbeke, B Winkler, A Cobb, V Rich, M Missilmani, N Flanagan, M Ho, A Hoyt, C Harvey, S Vining, M Hough, T Moore, P Richard, F De La Cruz, J Toufaily, R Hamdan, W Cooper, J Chanton
+Título: Tropical peatland carbon storage linked to global latitudinal trends in peat recalcitrance
+Publicación: Nature Communications
+Año: 2018
+Volumen: 9
+DOI: 10.1038/s41467-018-06050-2
+
+[20] ---------------------------------------------------------------------------
+Texto original: Ise, T., Dunn, A., Wofsy, S., Moorcroft, P. (2008) High sensitivity of peat decomposition to climate change through water-table feedback. Nature Geoscience, 1, 763-766. doi:10.1038/ngeo331
+
+Autores: T Ise, A Dunn, S Wofsy, P Moorcroft
+Título: High sensitivity of peat decomposition to climate change through water-table feedback
+Publicación: Nature Geoscience
+Año: 2008
+Volumen: 1
+Páginas: 763-766
+DOI: 10.1038/ngeo331
+
+[21] ---------------------------------------------------------------------------
+Texto original: Iturraspe, R., Urciuolo, A., Iturraspe, R. (2012) Spatial analysis and description of eastern peatlands of Tierra del Fuego, Argentina. In: Heikkilä, R., Lindholm, T. (eds.) Mires From Pole to Pole, The Finnish Environment 38, Finnish Environment Institute, Helsinki, 385-399.
+
+Autores: R Iturraspe, A Urciuolo, R Iturraspe
+Título: Spatial analysis and description of eastern peatlands of Tierra del Fuego
+Publicación: Mires From Pole to Pole
+Año: 2012
+Volumen: 38
+Páginas: 385-399
+
+[22] ---------------------------------------------------------------------------
+Texto original: Izquierdo, A., Foguet, J., Grau, R. (2015) Mapping and spatial characterization of Argentine High Andean peatbogs. Wetlands Ecology and Management, 23, 963-976. doi:10.1007/s11273- 015-9433-3
+
+Autores: A Izquierdo, J Foguet, R Grau
+Título: Mapping and spatial characterization of Argentine High Andean peatbogs
+Publicación: Wetlands Ecology and Management
+Año: 2015
+Volumen: 23
+Páginas: 963-976
+DOI: 10.1007/s11273-015-9433-3
+
+[23] ---------------------------------------------------------------------------
+Texto original: Jones, M.C., Booth, R.K., Yu, Z.C., Ferry, P. (2013) A 2200-year record of permafrost dynamics and carbon cycling in a collapse-scar bog, interior Alaska. Ecosystems, 16, 1-19. doi:10.1007/ s10021-012-9592-5
+
+Autores: M Jones, R Booth, Z Yu, P Ferry
+Título: A 2200-year record of permafrost dynamics and carbon cycling in a collapse-scar bog, interior Alaska
+Publicación: Ecosystems
+Año: 2013
+Volumen: 16
+Páginas: 1-19
+DOI: 10.1007/s10021-012-9592-5
+
+[24] ---------------------------------------------------------------------------
+Texto original: Joosten, H. (2009) The Global Peatland CO2 Picture: Peatland Status and Drainage Related Emissions in all Countries of the World. Wetlands International, Ede, 33 pp. Online at: https://www. wetlands.org/publications/the-global-peatland- co2-picture/, accessed 17 May 2020.
+
+Autores: H Joosten
+Título: The Global Peatland CO2 Picture: Peatland Status and Drainage Related Emissions in all Countries of the World
+Publicación: Wetlands International
+Año: 2009
+
+[25] ---------------------------------------------------------------------------
+Texto original: Joosten, H., Clarke, D. (2002) Wise Use of Mires and Peatlands -Background and Principles Including a Framework for Decision-Making. International Mire Conservation Group and International Peat Society, Saarijärvi, Finland, 304 pp.
+
+Autores: H Joosten, D Clarke
+Título: Wise Use of Mires and Peatlands -Background and Principles Including a Framework for Decision-Making
+Publicación: International Mire Conservation Group and International Peat Society
+Año: 2002
+
+[26] ---------------------------------------------------------------------------
+Texto original: Large, D.J. (2007) A 1.16 Ma record of carbon accumulation in western European peatland during the Oligocene from the Ballymoney lignite, Northern Ireland. Journal of the Geological Society, 164, 1233-1240. doi:10.1144/0016-76492006-148
+
+Autores: D Large
+Título: A 1.16 Ma record of carbon accumulation in western European peatland during the Oligocene from the Ballymoney lignite, Northern Ireland
+Publicación: Journal of the Geological Society
+Año: 2007
+Volumen: 164
+Páginas: 1233-1240
+DOI: 10.1144/0016-76492006-148
+
+[27] ---------------------------------------------------------------------------
+Texto original: Liao, J., Huang, Y. (2014) Global trend in aquatic ecosystem research from 1992 to 2011. Scientometrics, 98, 1203-1219. doi:10.1007/ s11192-013-1071-z
+
+Autores: J Liao, Y Huang
+Título: Global trend in aquatic ecosystem research from 1992 to 2011
+Publicación: Scientometrics
+Año: 2014
+Volumen: 98
+Páginas: 1203-1219
+DOI: 10.1007/s11192-013-1071-z
+
+[28] ---------------------------------------------------------------------------
+Texto original: Marcisz, K., Tinner, W., Colombaroli, D., Kolaczek, P., Slowinski, M., Fiaikiewicz-Koziel, B., Lokas, E., Lamentowicz, M. (2015) Long-term hydrological dynamics and fire history over the last 2000 years in CE Europe reconstructed from a high-resolution peat archive. Quaternary Science Reviews, 112, 138-152. doi:10.1016/ j.quascirev.2015.01.019
+
+Autores: K Marcisz, W Tinner, D Colombaroli, P Kolaczek, M Slowinski, B Fiaikiewicz-Koziel, E Lokas, M Lamentowicz
+Título: Long-term hydrological dynamics and fire history over the last 2000 years in CE Europe reconstructed from a high-resolution peat archive
+Publicación: Quaternary Science Reviews
+Año: 2015
+Volumen: 112
+Páginas: 138-152
+DOI: 10.1016/j.quascirev.2015.01.019
+
+[29] ---------------------------------------------------------------------------
+Texto original: Miettinen, J., Hooijer, A., Shi, C., Tollenaar, D., Vernimmen, R., Liew, S.C., Malins, C., Page, S.E. (2012) Extent of industrial plantations on Southeast Asian peatlands in 2010 with analysis of historical expansion and future projections. GCB Bioenergy, 4, 908-918. doi:10.1111/j.1757- 1707.2012.01172.x
+
+Autores: J Miettinen, A Hooijer, C Shi, D Tollenaar, R Vernimmen, S Liew, C Malins, S Page
+Título: Extent of industrial plantations on Southeast Asian peatlands in 2010 with analysis of historical expansion and future projections
+Publicación: GCB Bioenergy
+Año: 2012
+Volumen: 4
+Páginas: 908-918
+DOI: 10.1111/j.1757-1707.2012.01172.x
+
+[30] ---------------------------------------------------------------------------
+Texto original: Mongeon, P., Paul-Hus, A. (2016) The journal coverage of Web of Science and Scopus: a comparative analysis. Scientometrics, 106, 213- 228. doi:10.1007/s11192-015-1765-5
+
+Autores: P Mongeon, A Paul-Hus
+Título: The journal coverage of Web of Science and Scopus: a comparative analysis
+Publicación: Scientometrics
+Año: 2016
+Volumen: 106
+Páginas: 213-228
+DOI: 10.1007/s11192-015-1765-5
+
+[31] ---------------------------------------------------------------------------
+Texto original: Morris, P.J., Baird, A.J., Young, D.M., Swindles, G.T. (2015) Untangling climate signals from autogenic changes in long-term peatland development. Geophysical Research Letters, 42, 10788-10797. doi:10.1002/2015GL066824
+
+Autores: P Morris, A Baird, D Young, G Swindles
+Título: Untangling climate signals from autogenic changes in long-term peatland development
+Publicación: Geophysical Research Letters
+Año: 2015
+Volumen: 42
+Páginas: 10788-10797
+DOI: 10.1002/2015GL066824
+
+[32] ---------------------------------------------------------------------------
+Texto original: Page, S.E., Baird, A.J. (2016) Peatlands and global change: Response and resilience. Annual Review of Environment and Resources, 41, 35-57. doi:10.1146/annurev-environ-110615-085520
+
+Autores: S Page, A Baird
+Título: Peatlands and global change: Response and resilience
+Publicación: Annual Review of Environment and Resources
+Año: 2016
+Volumen: 41
+Páginas: 35-57
+DOI: 10.1146/annurev-environ-110615-085520
+
+[33] ---------------------------------------------------------------------------
+Texto original: Page, S., Hoscilo, A., Wosten, H., Jauhiainen, J., Silvius, M., Rieley, J., Ritzema, H., Tansey, K., Graham, L., Vasander, H., Limin, S. (2009) Restoration ecology of lowland tropical peatlands in Southeast Asia: Current knowledge and future research directions. Ecosystems, 12, 888-905. doi:10.1007/s10021-008-9216-2
+
+Autores: S Page, A Hoscilo, H Wosten, J Jauhiainen, M Silvius, J Rieley, H Ritzema, K Tansey, L Graham, H Vasander, S Limin
+Título: Restoration ecology of lowland tropical peatlands in Southeast Asia: Current knowledge and future research directions
+Publicación: Restoration ecology of lowland tropical peatlands in Southeast Asia: Current knowledge and future research directions
+Año: 2009
+Volumen: 12
+Páginas: 888-905
+DOI: 10.1007/s10021-008-9216-2
+
+[34] ---------------------------------------------------------------------------
+Texto original: Prach, K., Rehounkova, K., Lencova, K., Jirova, A., Konvalinkova, P., Mudrak, O., Student, V., Vanecek, Z., Tichy, L., Petrik, P., Smilauer, P., Pysek, P. (2014) Vegetation succession in restoration of disturbed sites in Central Europe: the direction of succession and species richness across 19 seres. Applied Vegetation Science, 17, 193-200. doi:10.1111/avsc.12064
+
+Autores: K Prach, K Rehounkova, K Lencova, A Jirova, P Konvalinkova, O Mudrak, V Student, Z Vanecek, L Tichy, P Petrik, P Smilauer, P Pysek
+Título: Vegetation succession in restoration of disturbed sites in Central Europe: the direction of succession and species richness across 19 seres
+Publicación: Applied Vegetation Science
+Año: 2014
+Volumen: 17
+Páginas: 193-200
+DOI: 10.1111/avsc.12064
+
+[35] ---------------------------------------------------------------------------
+Texto original: Rochefort, L., Quinty, F., Campeau, S., Johnson, K., Malterer, T. (2003) North American approach to the restoration of Sphagnum dominated peatlands. Wetlands Ecology and Management, 11, 3-20. doi:10.1023/A:1022011027946
+
+Autores: L Rochefort, F Quinty, S Campeau, K Johnson, T Malterer
+Título: North American approach to the restoration of Sphagnum dominated peatlands
+Publicación: Wetlands Ecology and Management
+Año: 2003
+Volumen: 11
+Páginas: 3-20
+DOI: 10.1023/A:1022011027946
+
+[36] ---------------------------------------------------------------------------
+Texto original: Shotyk, W., Cheburkin, A.K., Appleby, P.G., Fankhauser, A., Kramers, J.D. (1996) Two thousand years of atmospheric arsenic, antimony, and lead deposition recorded in an ombrotrophic peat bog profile, Jura Mountains, Switzerland. Earth and Planetary Science Letters, 145, E1-E7. doi:10.1016/s0012-821x(96)00197-5
+
+Autores: W Shotyk, A Cheburkin, P Appleby, A Fankhauser, J Kramers
+Título: Two thousand years of atmospheric arsenic, antimony, and lead deposition recorded in an ombrotrophic peat bog profile
+Publicación: Earth and Planetary Science Letters
+Año: 1996
+Volumen: 145
+Páginas: 1-E7
+DOI: 10.1016/s0012-821x(96)00197-5
+
+[37] ---------------------------------------------------------------------------
+Texto original: Sugimoto, C.R., Larivière, V. (2018) Measuring |Research: What Everyone Needs to Know. Oxford University Press, New York, 149 pp.
+
+Autores: C Sugimoto, V Larivière
+Título: Measuring |Research: What Everyone Needs to Know
+Publicación: Measuring |Research: What Everyone Needs to Know
+Año: 2018
+
+[38] ---------------------------------------------------------------------------
+Texto original: Swindles, G.T., Morris, P.J., Mullan, D., Watson, E.J., Turner, T.E., Roland, T.P., Amesbury, M.J., Kokfelt, U., Schoning, K., Pratte, S., Gallego- Sala, A., Charman, D.J., Sanderson, N., Garneau, M., Carrivick, J.L., Woulds, C., Holden, J., Parry, L., Galloway, J.M. (2015) The long-term fate of permafrost peatlands under rapid climate warming. Scientific Reports, 5, 17951, 6 pp. doi:10.1038/srep17951
+
+Autores: G Swindles, P Morris, D Mullan, E Watson, T Turner, T Roland, M Amesbury, U Kokfelt, K Schoning, S Pratte, A Gallego-Sala, D Charman, N Sanderson, M Garneau, J Carrivick, C Woulds, J Holden, L Parry, J Galloway
+Título: The long-term fate of permafrost peatlands under rapid climate warming
+Publicación: Scientific Reports
+Año: 2015
+Volumen: 5
+DOI: 10.1038/srep17951
+
+[39] ---------------------------------------------------------------------------
+Texto original: Tanneberger, F., Tegetmeyer, C., Busse, S., Barthelmes, A., Shumka, S., Marine, A.M., Jenderedjian, K., Steiner, G.M., Essl, F., Etzold, J., Mendes, C., Kozulin, A., Frankard, P., Milanovic, D., Ganeva, A., Apostolova, I., Alegro, A., Delipetrou, P., Navratilova, J., Risager, M., Leivits, A., Fosaa, A.M., Tuominen, S., Muller, F., Bakuradze, T., Sommer, M., Christanis, K., Szurdoki, E., Oskarsson, H., Brink, S.H., Connolly, J., Bragazza, L., Martinelli, G., Aleksans, O., Priede, A., Sungaila, D., Melovski, L., Belous, T., Saveljic, D., de Vries, F., Moen, A., Dembek, W., Mateus, J., Hanganu, J., Sirin, A., Markina, A., Napreenko, M., Lazarevic, P., Stanova, V.S., Skoberne, P., Perez, P.H., Pontevedra-Pombal, X., Lonnstad, J., Kuchler, M., Wust-Galley, C., Kirca, S., Mykytiuk, O., Lindsay, R., Joosten, H. (2017) The peatland map of Europe. Mires and Peat, 19, 22, 17 pp. doi:10.19189/MaP.2016.OMB.264
+
+Autores: F Tanneberger, C Tegetmeyer, S Busse, A Barthelmes, S Shumka, A Marine, K Jenderedjian, G Steiner, F Essl, J Etzold, C Mendes, A Kozulin, P Frankard, D Milanovic, A Ganeva, I Apostolova, A Alegro, P Delipetrou, J Navratilova, M Risager, A Leivits, A Fosaa, S Tuominen, F Muller, T Bakuradze, M Sommer, K Christanis, E Szurdoki, H Oskarsson, S Brink, J Connolly, L Bragazza, G Martinelli, O Aleksans, A Priede, D Sungaila, L Melovski, T Belous, D Saveljic, F De Vries, A Moen, W Dembek, J Mateus, J Hanganu, A Sirin, A Markina, M Napreenko, P Lazarevic, V Stanova, P Skoberne, P Perez, X Pontevedra-Pombal, J Lonnstad, M Kuchler, C Wust-Galley, S Kirca, O Mykytiuk, R Lindsay, H Joosten
+Título: The peatland map of Europe. Mires and Peat
+Publicación: The peatland map of Europe. Mires and Peat
+Año: 2017
+Volumen: 19
+DOI: 10.19189/MaP.2016.OMB.264
+
+[40] ---------------------------------------------------------------------------
+Texto original: Turetsky, M.R., Benscoter, B., Page, S., Rein, G., Van Der Werf, G.R., Watts, A. (2015) Global vulnerability of peatlands to fire and carbon loss. Nature Geoscience, 8, 11-14. doi:10.1038/ ngeo2325
+
+Autores: M Turetsky, B Benscoter, S Page, G Rein, G Van Der Werf, A Watts
+Título: Global vulnerability of peatlands to fire and carbon loss
+Publicación: Nature Geoscience
+Año: 2015
+Volumen: 8
+Páginas: 11-14
+DOI: 10.1038/ngeo2325
+
+[41] ---------------------------------------------------------------------------
+Texto original: van Bellen, S., Garneau, M., Baird, A., Bourgault, M.-A., Quillet, A. (2018) Exploring pathways to late Holocene increased surface wetness in subarctic peatlands of eastern Canada. Quaternary Research, 90, 83-95. doi:10.1017/ qua.2018.34
+
+Autores: S Van Bellen, M Garneau, A Baird, M.-A Bourgault, A Quillet
+Título: Exploring pathways to late Holocene increased surface wetness in subarctic peatlands of eastern Canada
+Publicación: Quaternary Research
+Año: 2018
+Volumen: 90
+Páginas: 83-95
+DOI: 10.1017/qua.2018.34
+
+[42] ---------------------------------------------------------------------------
+Texto original: Vasander, H., Tuittila, E.S., Lode, E., Lundin, L., Ilomets, M., Sallantaus, T., Heikkila, R., Pitkanen, M.L., Laine, J. (2003) Status and restoration of peatlands in northern Europe. Wetlands Ecology and Management, 11, 51-63. doi:10.1023/a:1022061622602
+
+Autores: H Vasander, E Tuittila, E Lode, L Lundin, M Ilomets, T Sallantaus, R Heikkila, M Pitkanen, J Laine
+Título: Status and restoration of peatlands in northern
+Publicación: Europe. Wetlands Ecology and Management
+Año: 2003
+Volumen: 11
+Páginas: 51-63
+DOI: 10.1023/a:1022061622602
+
+[43] ---------------------------------------------------------------------------
+Texto original: Viehweider, B., Lutz, J., Oeggl, K. (2015) Late- Holocene land use changes caused by exploitation in the mining region of Kitzbuhel (Tyrol, Austria). Vegetation History and Archaeobotany, 24, 711- 729. doi:10.1007/s00334-015-0527-x
+
+Autores: B Viehweider, J Lutz, K Oeggl
+Título: Late-Holocene land use changes caused by exploitation in the mining region of Kitzbuhel
+Publicación: Vegetation History and Archaeobotany
+Año: 2015
+Volumen: 24
+Páginas: 711-729
+DOI: 10.1007/s00334-015-0527-x
+
+[44] ---------------------------------------------------------------------------
+Texto original: Voigt, C., Marushchak, M.E., Mastepanov, M., Lamprecht, R.E., Christensen, T.R., Dorodnikov, M., Jackowicz-Korczyński, M., Lindgren, A., Lohila, A., Nykänen, H., Oinonen, M., Oksanen, T., Palonen, V., Treat, C.C., Martikainen, P.J., Biasi, C. (2019) Ecosystem carbon response of an Arctic peatland to simulated permafrost thaw. Global Change Biology, 25, 1746-1764.
+
+Autores: C Voigt, M Marushchak, M Mastepanov, R Lamprecht, T Christensen, M Dorodnikov, M Jackowicz-Korczyński, A Lindgren, A Lohila, H Nykänen, M Oinonen, T Oksanen, V Palonen, C Treat, P Martikainen, C Biasi
+Título: Ecosystem carbon response of an Arctic peatland to simulated permafrost thaw
+Publicación: Global Change Biology
+Año: 2019
+Volumen: 25
+Páginas: 1746-1764
+

@@ -59,9 +59,6 @@ def clasificar_estilo_local(referencias: List[Dict[str, str]]) -> Dict[str, Any]
     if not textos_refs:
         return {'estilo': 'Desconocido', 'confianza': 0}
     
-    # Unir todas las referencias en un solo texto para análisis
-    texto_completo = "\n".join(textos_refs)
-    
     # Contadores de patrones por estilo
     patrones = defaultdict(int)
     
