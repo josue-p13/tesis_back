@@ -68,13 +68,48 @@ def clasificar_estilo_local(referencias: List[Dict[str, str]]) -> Dict[str, Any]
         if not linea:
             continue
         
-        # IEEE: [1], [2], etc.
-        if re.match(r'^\[\d+\]', linea):
-            patrones['IEEE'] += 1
+        # Verificar primero los patrones de Vancouver INDEPENDIENTEMENTE del número inicial
+        # Esto es crucial porque muchas veces las referencias no tienen el número al inicio
+        vancouver_score = 0
         
-        # Vancouver: 1., 2., etc.
-        elif re.match(r'^\d+\.\s+', linea):
-            patrones['Vancouver'] += 1
+        # Patrón muy característico de Vancouver: año seguido de punto y coma "2015; 12:" o "2021; 398:"
+        if re.search(r'\d{4}\s*;\s*\d+:', linea):
+            vancouver_score += 5  # Muy característico de Vancouver
+        
+        # Patrón: "Apellido Inicial" sin coma entre apellido e inicial (ej. "Safi N", "Singh L")
+        # Cuenta cuántos autores con este patrón hay
+        autores_vancouver = re.findall(r'\b[A-Z][a-z]+\s+[A-Z]{1,3}\b', linea)
+        if len(autores_vancouver) >= 2:
+            vancouver_score += 3  # Múltiples autores en formato Vancouver
+        elif len(autores_vancouver) == 1:
+            vancouver_score += 2
+        
+        # Patrón: volumen:páginas (ej. "398: 1418-82" o "12:464-74")
+        if re.search(r'\d+:\s*\d+-\d+\.?', linea):
+            vancouver_score += 2
+        
+        # Patrón: abreviaturas médicas comunes en Vancouver
+        if re.search(r'\b(?:N Engl J Med|Lancet|JAMA|BMJ|Ann Intern Med|Nat Rev|Am J|Int J Environ Res Public Health)\b', linea):
+            vancouver_score += 2
+        
+        # Si tiene número al inicio "1. ", sumar punto adicional
+        if re.match(r'^\d+\.\s+', linea):
+            vancouver_score += 1
+        
+        # Si acumuló puntos de Vancouver, registrarlo
+        if vancouver_score >= 4:  # Umbral mínimo para considerar Vancouver
+            patrones['Vancouver'] += vancouver_score
+            continue  # No evaluar otros estilos si ya es Vancouver
+        
+        # IEEE: [1], [2], etc. - DEBE ser verificado después de Vancouver
+        if re.match(r'^\[\d+\]', linea):
+            patrones['IEEE'] += 3  # Mayor peso para corchetes explícitos
+        # Detectar IEEE por patrones característicos: "et al.", "pp.", "vol.", "no."
+        elif re.search(r'\bet al\b.*?,.*?(?:pp\.|vol\.|no\.|IEEE)', linea, re.IGNORECASE):
+            patrones['IEEE'] += 2
+        # Detectar formato IEEE con comillas en título y sin paréntesis en año
+        elif re.search(r'"[^"]+",.*?\d{4}', linea) and not re.search(r'\(\d{4}\)', linea):
+            patrones['IEEE'] += 2
         
         # Harvard: (año) sin punto - Ejemplo: "Smith, J. (2024) Title of work"
         # IMPORTANTE: Debe chequearse ANTES que APA

@@ -67,3 +67,7 @@ dmypy.json
 # FastAPI specific
 *.pem
 *.key
+
+# Referencias y documentos de prueba
+referencias/
+*.pdf

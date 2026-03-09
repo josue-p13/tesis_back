@@ -1,0 +1,15 @@
+1. El Sistema de Citación en el Texto
+En los documentos analizados, la cita no usa nombres de autores ni años entre paréntesis.
+·	Superíndices: Se utilizan números pequeños por encima de la línea del texto (ej. ...in the past two decades.¹⁰).
+·	Ubicación: El número de la cita se coloca después de los signos de puntuación (puntos o comas), sin espacio intermedio.
+·	Secuencia: Si se citan varios documentos, se separan por comas si no son correlativos (¹⁵,¹⁶) o por guiones si son un rango (¹⁻³).
+2. Estructura de la Referencia Bibliográfica (Al Final)
+El estilo Vancouver es extremadamente "limpio" y evita el uso excesivo de cursivas o negritas. Esta es la anatomía exacta de una referencia de revista médica según tus archivos:
+·	Autores: Se enumeran como Apellido Inicial (ej. Safi N, Singh L). No se usan comas entre el apellido y la inicial, solo para separar a un autor de otro. Si hay más de 6 autores, se suele usar et al. después del sexto.
+·	Título del artículo: Solo la primera palabra y los nombres propios van en mayúscula. Termina siempre con un punto.
+·	Nombre de la revista: Debe estar abreviado según el estilo de la National Library of Medicine (ej. Lancet, N Engl J Med, Am J Epidemiol). No se usan cursivas en este estilo específico de The Lancet.
+·	Año de publicación: Seguido inmediatamente de un punto y coma ( ; ) sin espacio.
+·	Volumen: Seguido de un dos puntos ( : ). Si hay número de edición, va entre paréntesis después del volumen 10(2):.
+·	Páginas: Se cierran con un punto final. Un detalle clave de Vancouver es la abreviación de la segunda cifra (ej. 464-74 en lugar de 464-474).
+Ejemplo de Referencia Completa (para testeo):
+1. Heit JA. Epidemiology of venous thromboembolism. Nat Rev Cardiol 2015; 12:464-74.
