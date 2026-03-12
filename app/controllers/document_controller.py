@@ -1,10 +1,11 @@
 from fastapi import APIRouter, UploadFile, File, HTTPException, Query
-from typing import Dict, Any, List
+from typing import Dict, Any
 
 from app.services.document_service import extraer_referencias_grobid
-from app.services.file_generator_service import generar_txt_referencias, generar_txt_resumen
+from app.services.file_generator_service import generar_txt_referencias, generar_txt_resumen, generar_txt_validacion
 from app.services.citation_style_detector_service import detectar_estilo_citacion, obtener_descripcion_estilo
 from app.services.database_service import DatabaseService
+from app.services.validacion_referencias_service import validar_referencias
 
 
 router = APIRouter()
@@ -13,21 +14,9 @@ router = APIRouter()
 @router.post("/extraer-referencias")
 async def extraer_referencias(
     pdf: UploadFile = File(...), 
-    guardar_en_bd: bool = Query(True, description="Guardar referencias en base de datos")
+    guardar_en_bd: bool = Query(True, description="Guardar referencias en base de datos"),
+    validar: bool = Query(True, description="Validar referencias")
 ) -> Dict[str, Any]:
-    """
-    Extrae las referencias bibliográficas de un PDF usando GROBID,
-    guarda las referencias en la base de datos (si no son duplicadas),
-    y genera 2 archivos TXT: uno completo y otro resumido.
-    
-    Args:
-        pdf: Archivo PDF a procesar
-        guardar_en_bd: Si es True, guarda las referencias en la base de datos
-        
-    Returns:
-        JSON con las referencias, estadísticas de BD y rutas de archivos generados
-    """
-    # Validar que sea un PDF
     if pdf.content_type != "application/pdf":
         raise HTTPException(
             status_code=400, 
@@ -69,6 +58,14 @@ async def extraer_referencias(
         # Agregar estadísticas de BD si se guardaron referencias
         if guardar_en_bd and estadisticas_bd:
             response["base_de_datos"] = estadisticas_bd
+
+        # Si validar=True, usa las referencias ya extraídas directamente — sin construir JSON a mano
+        if validar and referencias_extraidas:
+            resultado_validacion = await validar_referencias(referencias_extraidas)
+            nombre_txt_validacion = f"validacion_{nombre_base}.txt"
+            ruta_validacion = generar_txt_validacion(resultado_validacion, nombre_txt_validacion)
+            response["archivos_generados"]["validacion"] = ruta_validacion
+            response["validacion"] = resultado_validacion
         
         return response
     
@@ -134,3 +131,5 @@ async def obtener_estadisticas() -> Dict[str, Any]:
             status_code=500,
             detail=f"Error al obtener estadísticas: {str(e)}"
         )
+
+

@@ -5,7 +5,6 @@ from datetime import datetime
 from app.services.citation_style_detector_service import detectar_estilo_citacion, obtener_descripcion_estilo
 
 
-# Obtener el directorio raíz del proyecto
 BASE_DIR = Path(__file__).resolve().parent.parent.parent
 OUTPUTS_DIR = BASE_DIR / "referencias"
 
@@ -22,20 +21,7 @@ def generar_txt_referencias(referencias: List[Dict[str, str]], nombre_archivo: s
         Ruta del archivo TXT generado
     """
     # Crear directorio de salida si no existe
-    print(f"[DEBUG] Creando directorio: {OUTPUTS_DIR}")
     OUTPUTS_DIR.mkdir(parents=True, exist_ok=True)
-    print(f"[DEBUG] Directorio creado exitosamente")
-    
-    # DEBUG: Mostrar qué está llegando realmente
-    print(f"\n[DEBUG] Total referencias recibidas: {len(referencias)}")
-    if referencias:
-        print(f"[DEBUG] Primera referencia completa:")
-        for campo, valor in referencias[0].items():
-            print(f"  - {campo}: {valor[:100] if isinstance(valor, str) and len(valor) > 100 else valor}")
-        
-        # Verificar si tienen el campo 'raw'
-        refs_con_raw = sum(1 for ref in referencias if 'raw' in ref and ref['raw'])
-        print(f"[DEBUG] Referencias con campo 'raw': {refs_con_raw}/{len(referencias)}")
     
     # Generar nombre de archivo si no se proporciona
     if not nombre_archivo:
@@ -43,7 +29,6 @@ def generar_txt_referencias(referencias: List[Dict[str, str]], nombre_archivo: s
         nombre_archivo = f"referencias_{timestamp}.txt"
     
     ruta_archivo = OUTPUTS_DIR / nombre_archivo
-    print(f"[DEBUG] Ruta del archivo: {ruta_archivo}")
     
     # Detectar estilo de citación
     estilo = detectar_estilo_citacion(referencias)
@@ -126,7 +111,6 @@ def generar_txt_resumen(referencias: List[Dict[str, str]], nombre_archivo: str |
         nombre_archivo = f"resumen_{timestamp}.txt"
     
     ruta_archivo = OUTPUTS_DIR / nombre_archivo
-    print(f"[DEBUG] Generando archivo de resumen: {ruta_archivo}")
     
     # Generar contenido del archivo
     contenido = "=" * 80 + "\n"
@@ -137,29 +121,92 @@ def generar_txt_resumen(referencias: List[Dict[str, str]], nombre_archivo: str |
     
     for idx, ref in enumerate(referencias, 1):
         contenido += f"{idx}. "
-        
-        # Autores
-        if 'año' in ref:
-            contenido += f"{ref['año']}"
-        
-        # # Título
-        # if 'titulo' in ref:
-        #     contenido += f'"{ref["titulo"]}". '
-        
-        # # Publicación
-        # if 'publicacion' in ref:
-        #     contenido += f"{ref['publicacion']}. "
-        
-        # # Año
-        # if 'año' in ref:
-        #     contenido += f"({ref['año']})"
-        
+        if ref.get('autores'):
+            contenido += f"{ref['autores']}. "
+        if ref.get('titulo'):
+            contenido += f'"{ref["titulo"]}". '
+        if ref.get('publicacion'):
+            contenido += f"{ref['publicacion']}. "
+        if ref.get('año'):
+            contenido += f"({ref['año']})"
         contenido += "\n\n"
     
     # Escribir archivo
     with open(ruta_archivo, 'w', encoding='utf-8') as f:
         f.write(contenido)
     
+    return str(ruta_archivo)
+
+def generar_txt_validacion(resultado_validacion: Dict, nombre_archivo: str | None = None) -> str:
+    OUTPUTS_DIR.mkdir(parents=True, exist_ok=True)
+
+    if not nombre_archivo:
+        timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+        nombre_archivo = f"validacion_{timestamp}.txt"
+
+    ruta_archivo = OUTPUTS_DIR / nombre_archivo
+
+    total          = resultado_validacion.get("total", 0)
+    encontradas    = resultado_validacion.get("encontradas", 0)
+    no_encontradas = resultado_validacion.get("no_encontradas", 0)
+    porcentaje     = resultado_validacion.get("porcentaje_verificadas", 0)
+    referencias    = resultado_validacion.get("referencias", [])
+
+    contenido  = "=" * 80 + "\n"
+    contenido += "VALIDACION DE REFERENCIAS\n"
+    contenido += "=" * 80 + "\n\n"
+    contenido += f"Fecha de validacion : {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}\n"
+    contenido += f"Total referencias   : {total}\n"
+    contenido += f"Verificadas         : {encontradas}\n"
+    contenido += f"No encontradas      : {no_encontradas}\n"
+    contenido += f"Porcentaje validas  : {porcentaje}%\n"
+    contenido += "=" * 80 + "\n\n"
+
+    ESTADOS = {
+        "VERIFICADA":                        "[OK] VERIFICADA (por DOI)",
+        "DOI_NO_ENCONTRADO":                 "[X]  DOI no encontrado",
+        "ENCONTRADA_POR_TITULO":             "[~]  Encontrada por titulo",
+        "ENCONTRADA_POR_TITULO (DOI fallido)": "[~]  Encontrada por titulo (DOI fallido)",
+        "REFERENCIA_WEB":                    "[W]  Referencia web",
+        "NO_ENCONTRADA":                     "[X]  No encontrada",
+        "SIN_DATOS_PARA_BUSCAR":             "[?]  Sin datos para buscar",
+    }
+
+    for ref in referencias:
+        idx      = ref.get("indice", "?")
+        titulo   = ref.get("titulo_original", "Sin titulo")
+        autores  = ref.get("autores", "")
+        anio     = ref.get("año", "")
+        doi_orig = ref.get("doi_original", "")
+        estado   = ref.get("estado", "DESCONOCIDO")
+        val      = ref.get("validacion", {})
+
+        contenido += f"[{idx}] {titulo}\n"
+        if autores:
+            contenido += f"    Autores  : {autores}\n"
+        if anio:
+            contenido += f"    Ano      : {anio}\n"
+        if doi_orig:
+            contenido += f"    DOI orig : {doi_orig}\n"
+        contenido += f"    Estado   : {ESTADOS.get(estado, estado)}\n"
+
+        if val.get("encontrado"):
+            contenido += f"    Fuente   : {val.get('fuente', '')}\n"
+            if val.get("titulo_verificado"):
+                contenido += f"    Titulo verificado : {val['titulo_verificado']}\n"
+            if val.get("doi_encontrado"):
+                contenido += f"    DOI sugerido      : {val['doi_encontrado']}\n"
+            if val.get("isbn"):
+                contenido += f"    ISBN              : {val['isbn']}\n"
+            if val.get("url"):
+                contenido += f"    URL               : {val['url']}\n"
+            if val.get("url_openalex"):
+                contenido += f"    OpenAlex          : {val['url_openalex']}\n"
+        contenido += "\n"
+
+    with open(ruta_archivo, 'w', encoding='utf-8') as f:
+        f.write(contenido)
+
     return str(ruta_archivo)
 
 

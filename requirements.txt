@@ -5,3 +5,5 @@ python-multipart
 psycopg2-binary
 python-dotenv
 sqlalchemy
+deep-translator
+langdetect

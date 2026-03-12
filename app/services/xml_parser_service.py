@@ -120,6 +120,13 @@ def parsear_referencias_xml(xml_texto: str) -> List[Dict[str, str]]:
             doi_elem = biblStruct.find('.//tei:idno[@type="DOI"]', ns)
             if doi_elem is not None and doi_elem.text:
                 ref['doi'] = doi_elem.text.strip()
+
+            # Extraer URL (GROBID la pone en <ptr target="...">)
+            ptr_elem = biblStruct.find('.//tei:ptr', ns)
+            if ptr_elem is not None:
+                target = ptr_elem.get('target', '').strip()
+                if target.startswith('http'):
+                    ref['url'] = target
             
             # Extraer volumen y páginas
             volumen_elem = biblStruct.find('.//tei:monogr/tei:imprint/tei:biblScope[@unit="volume"]', ns)

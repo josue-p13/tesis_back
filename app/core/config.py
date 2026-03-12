@@ -20,7 +20,10 @@ class Configuracion:
     
     # GROBID
     GROBID_URL = os.getenv("GROBID_URL", "http://localhost:8070")
-    
+
+    # APIs externas
+    CORE_API_KEY = os.getenv("CORE_API_KEY", "")
+
     # Directorios
     REFERENCIAS_DIR = os.getenv("REFERENCIAS_DIR", "referencias")
 
