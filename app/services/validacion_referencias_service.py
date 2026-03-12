@@ -18,7 +18,7 @@ from app.services.apis.http_client import HTTP_CLIENT
 
 async def buscar_por_doi(doi: str) -> Dict[str, Any]:
     resultado = {"doi": doi, "encontrado": False}
-    for buscar in (openalex.buscar_doi, crossref.buscar_doi, ss.buscar_doi, pubmed.buscar_doi):
+    for buscar in (openalex.buscar_doi, crossref.buscar_doi, ss.buscar_doi, pubmed.buscar_doi, core.buscar_doi):
         datos = await buscar(doi)
         if datos:
             resultado.update(datos)
@@ -62,6 +62,7 @@ async def buscar_por_titulo(titulo: str, autores: str = "") -> Dict[str, Any]:
                 "doi_encontrado": "",
                 "citaciones": 0,
                 "url": datos_gb["url"],
+                "autores_verificados": datos_gb.get("autores", ""),
             })
             if datos_gb.get("isbn"):
                 resultado["isbn"] = datos_gb["isbn"]
@@ -79,8 +80,20 @@ async def buscar_por_titulo(titulo: str, autores: str = "") -> Dict[str, Any]:
         "doi_encontrado": mejor["doi"],
         "citaciones": mejor.get("citaciones", 0),
         "url": mejor["url"],
+        "autores_verificados": mejor.get("autores", ""),
     })
     return resultado
+
+
+# ──────────────────────────── verificación de URL web ────────────────────────────
+
+async def _verificar_url(url: str) -> bool:
+    """Verifica que una URL web sea accesible haciendo un HEAD request."""
+    try:
+        resp = await HTTP_CLIENT.head(url, follow_redirects=True)
+        return resp.status_code < 400
+    except Exception:
+        return False
 
 
 # ──────────────────────────── validación individual y masiva ────────────────────────────
@@ -127,8 +140,9 @@ async def _validar_referencia_individual(ref: Dict[str, Any], indice: int) -> Di
                 if datos_arxiv.get("doi_encontrado"):
                     resultado["doi_sugerido"] = datos_arxiv["doi_encontrado"]
                 return resultado
-        resultado["estado"]     = "REFERENCIA_WEB"
-        resultado["validacion"] = {"encontrado": True, "fuente": "URL web", "url": url_ref}
+        url_accesible = await _verificar_url(url_ref)
+        resultado["estado"]     = "REFERENCIA_WEB" if url_accesible else "URL_NO_ACCESIBLE"
+        resultado["validacion"] = {"encontrado": url_accesible, "fuente": "URL web", "url": url_ref}
         resultado["con_doi"]    = False
 
     elif ref.get("titulo"):
@@ -162,7 +176,8 @@ async def validar_referencias(referencias: List[Dict]) -> Dict[str, Any]:
             encontradas += 1
         else:
             no_encontradas += 1
-        if r.pop("con_doi", False):
+        con_doi_val = r.pop("con_doi", False)
+        if con_doi_val:
             con_doi += 1
         else:
             sin_doi += 1
