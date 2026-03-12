@@ -1,7 +1,7 @@
 from typing import Any, Dict, Optional
 
-from app.services.apis.http_client import _get, SEMANTICSCHOLAR_BASE
-from app.services.text_utils_service import _validar_resultado
+from app.services.verificador.http_client import _get, SEMANTICSCHOLAR_BASE
+from app.services.obtener.text_utils_service import _validar_resultado
 
 _FIELDS_FULL = "title,authors,year,externalIds,citationCount"
 

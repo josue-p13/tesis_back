@@ -6,7 +6,7 @@ Modificará temporalmente el parser para guardar el XML
 import sys
 sys.path.insert(0, '/home/josue/Escritorio/Tesis/back_def')
 
-from app.services.xml_parser_service import parsear_referencias_xml
+from app.services.obtener.xml_parser_service import parsear_referencias_xml
 
 # Simular un XML típico de GROBID
 xml_ejemplo = """<?xml version="1.0" encoding="UTF-8"?>

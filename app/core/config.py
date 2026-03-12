@@ -27,5 +27,8 @@ class Configuracion:
     # Directorios
     REFERENCIAS_DIR = os.getenv("REFERENCIAS_DIR", "referencias")
 
+    # Validación y similitud
+    SIMILITUD_TITULO_THRESHOLD = float(os.getenv("SIMILITUD_TITULO_THRESHOLD", "0.85"))  # 85% similitud mínima para títulos
+
 
 config = Configuracion()

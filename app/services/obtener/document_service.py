@@ -2,8 +2,8 @@ from fastapi import UploadFile
 import httpx
 from typing import List, Dict, Tuple
 
-from app.services.xml_parser_service import parsear_referencias_xml
-from app.services.database_service import DatabaseService
+from app.services.obtener.xml_parser_service import parsear_referencias_xml
+from app.services.db.database_service import DatabaseService
 from app.core.config import config
 
 

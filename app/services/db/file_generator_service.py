@@ -2,7 +2,7 @@ from typing import List, Dict
 from pathlib import Path
 from datetime import datetime
 
-from app.services.citation_style_detector_service import detectar_estilo_citacion, obtener_descripcion_estilo
+from app.services.obtener.citation_style_detector_service import detectar_estilo_citacion, obtener_descripcion_estilo
 
 
 BASE_DIR = Path(__file__).resolve().parent.parent.parent
@@ -164,10 +164,12 @@ def generar_txt_validacion(resultado_validacion: Dict, nombre_archivo: str | Non
 
     ESTADOS = {
         "VERIFICADA":                        "[OK] VERIFICADA (por DOI)",
+        "VERIFICADA (BD Cache)":             "[✓]  VERIFICADA (desde BD cache)",
         "DOI_NO_ENCONTRADO":                 "[X]  DOI no encontrado",
         "ENCONTRADA_POR_TITULO":             "[~]  Encontrada por titulo",
         "ENCONTRADA_POR_TITULO (DOI fallido)": "[~]  Encontrada por titulo (DOI fallido)",
         "REFERENCIA_WEB":                    "[W]  Referencia web",
+        "URL_NO_ACCESIBLE":                  "[!]  URL no accesible",
         "NO_ENCONTRADA":                     "[X]  No encontrada",
         "SIN_DATOS_PARA_BUSCAR":             "[?]  Sin datos para buscar",
     }
@@ -202,6 +204,10 @@ def generar_txt_validacion(resultado_validacion: Dict, nombre_archivo: str | Non
                 contenido += f"    URL               : {val['url']}\n"
             if val.get("url_openalex"):
                 contenido += f"    OpenAlex          : {val['url_openalex']}\n"
+        elif estado == "URL_NO_ACCESIBLE" and val.get("url"):
+            # Mostrar URL incluso si no es accesible para verificacion manual
+            contenido += f"    Fuente   : {val.get('fuente', 'URL web')}\n"
+            contenido += f"    URL      : {val['url']} (requiere verificacion manual)\n"
         contenido += "\n"
 
     with open(ruta_archivo, 'w', encoding='utf-8') as f:

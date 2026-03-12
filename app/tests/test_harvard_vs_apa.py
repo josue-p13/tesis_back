@@ -4,7 +4,7 @@ Test específico para distinguir entre Harvard y APA
 La diferencia clave: Harvard usa (año) sin punto, APA usa (año). con punto
 """
 
-from app.services.citation_style_detector_service import detectar_estilo_citacion, obtener_descripcion_estilo
+from app.services.obtener.citation_style_detector_service import detectar_estilo_citacion, obtener_descripcion_estilo
 
 # HARVARD: (2024) SIN PUNTO después del paréntesis
 referencias_harvard = [

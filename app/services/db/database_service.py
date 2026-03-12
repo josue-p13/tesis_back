@@ -24,10 +24,32 @@ class DatabaseService:
                 dbname=config.DB_NAME,
                 cursor_factory=RealDictCursor
             )
+            # Crear columnas nuevas si no existen (migración automática)
+            self._crear_columnas_verificacion()
             return True
         except Exception as e:
             print(f"Error al conectar a la base de datos: {e}")
             return False
+    
+    def _crear_columnas_verificacion(self):
+        """Crea las columnas de verificación si no existen"""
+        if not self.connection:
+            return
+        
+        try:
+            with self.connection.cursor() as cursor:
+                # Agregar columnas para datos de verificación
+                cursor.execute("""
+                    ALTER TABLE referencias 
+                    ADD COLUMN IF NOT EXISTS fuente_verificacion VARCHAR(100),
+                    ADD COLUMN IF NOT EXISTS citaciones INTEGER DEFAULT 0,
+                    ADD COLUMN IF NOT EXISTS url_verificada TEXT,
+                    ADD COLUMN IF NOT EXISTS fecha_verificacion TIMESTAMP DEFAULT CURRENT_TIMESTAMP;
+                """)
+                self.connection.commit()
+        except Exception as e:
+            print(f"Nota: Columnas de verificación ya existen o error: {e}")
+            self.connection.rollback()
     
     def desconectar(self):
         """Cierra la conexión con la base de datos"""
@@ -110,13 +132,110 @@ class DatabaseService:
             print(f"Error al verificar duplicado: {e}")
             return False, None
     
-    def guardar_referencia(self, referencia: Dict, fuente_documento: str = "") -> Tuple[bool, Optional[int], str]:
+    def buscar_por_doi(self, doi: str) -> Optional[Dict]:
+        """
+        Busca una referencia en la BD por DOI exacto.
+        
+        Args:
+            doi: DOI a buscar
+            
+        Returns:
+            Diccionario con la referencia si existe, None si no
+        """
+        if not self.connection or not doi:
+            return None
+        
+        try:
+            with self.connection.cursor() as cursor:
+                cursor.execute(
+                    """
+                    SELECT * FROM referencias 
+                    WHERE doi = %s
+                    LIMIT 1
+                    """,
+                    (doi.strip(),)
+                )
+                resultado = cursor.fetchone()
+                return dict(resultado) if resultado else None
+                
+        except Exception as e:
+            print(f"Error al buscar por DOI: {e}")
+            return None
+    
+    def buscar_por_titulo_similitud(self, titulo: str, autores: str = "") -> Optional[Dict]:
+        """
+        Busca una referencia en la BD por similitud de título.
+        Usa el threshold configurado en config.py
+        
+        Args:
+            titulo: Título a buscar
+            autores: Autores (opcional, mejora precisión)
+            
+        Returns:
+            Diccionario con la referencia si existe y supera el threshold, None si no
+        """
+        if not self.connection or not titulo:
+            return None
+        
+        from app.core.config import config
+        from app.services.obtener.text_utils_service import _similitud_titulos
+        
+        try:
+            with self.connection.cursor() as cursor:
+                # Buscar candidatos por título similar (búsqueda amplia)
+                cursor.execute(
+                    """
+                    SELECT * FROM referencias 
+                    WHERE titulo ILIKE %s
+                    LIMIT 10
+                    """,
+                    (f"%{titulo[:50]}%",)
+                )
+                candidatos = [dict(row) for row in cursor.fetchall()]
+                
+                # Si hay autores, también buscar por autores
+                if autores and not candidatos:
+                    cursor.execute(
+                        """
+                        SELECT * FROM referencias 
+                        WHERE autores ILIKE %s
+                        LIMIT 10
+                        """,
+                        (f"%{autores[:30]}%",)
+                    )
+                    candidatos.extend([dict(row) for row in cursor.fetchall()])
+                
+                # Calcular similitud y encontrar el mejor match
+                mejor_match = None
+                mejor_similitud = 0.0
+                
+                for candidato in candidatos:
+                    similitud = _similitud_titulos(titulo, candidato.get('titulo', ''))
+                    
+                    # Si hay autores, dar peso adicional si coinciden
+                    if autores and candidato.get('autores'):
+                        autores_similar = _similitud_titulos(autores, candidato['autores'])
+                        similitud = (similitud * 0.7) + (autores_similar * 0.3)
+                    
+                    if similitud > mejor_similitud and similitud >= config.SIMILITUD_TITULO_THRESHOLD:
+                        mejor_similitud = similitud
+                        mejor_match = candidato
+                
+                return mejor_match
+                
+        except Exception as e:
+            print(f"Error al buscar por título: {e}")
+            return None
+    
+    def guardar_referencia(self, referencia: Dict, fuente_documento: str = "", 
+                          datos_verificacion: Optional[Dict] = None) -> Tuple[bool, Optional[int], str]:
         """
         Guarda una referencia en la base de datos si no existe.
         
         Args:
             referencia: Diccionario con los datos de la referencia
             fuente_documento: Nombre del documento fuente
+            datos_verificacion: Datos de verificación (fuente, citaciones, url_verificada)
             
         Returns:
             Tupla (guardado: bool, id: int o None, mensaje: str)
@@ -143,13 +262,24 @@ class DatabaseService:
         # Calcular hash único
         hash_unico = self.calcular_hash_referencia(titulo, autores, año, publicacion)
         
+        # Extraer datos de verificación si existen
+        fuente_verificacion = None
+        citaciones = 0
+        url_verificada = None
+        
+        if datos_verificacion:
+            fuente_verificacion = datos_verificacion.get('fuente')
+            citaciones = datos_verificacion.get('citaciones', 0)
+            url_verificada = datos_verificacion.get('url')
+        
         try:
             with self.connection.cursor() as cursor:
                 cursor.execute(
                     """
                     INSERT INTO referencias 
-                    (titulo, autores, año, publicacion, doi, volumen, paginas, texto_raw, fuente_documento, hash_unico)
-                    VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+                    (titulo, autores, año, publicacion, doi, volumen, paginas, texto_raw, 
+                     fuente_documento, hash_unico, fuente_verificacion, citaciones, url_verificada)
+                    VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
                     RETURNING id
                     """,
                     (
@@ -162,7 +292,10 @@ class DatabaseService:
                         referencia.get('paginas', None),
                         referencia.get('raw', None),
                         fuente_documento,
-                        hash_unico
+                        hash_unico,
+                        fuente_verificacion,
+                        citaciones,
+                        url_verificada
                     )
                 )
                 

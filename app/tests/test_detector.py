@@ -3,7 +3,7 @@
 Script de prueba para el nuevo detector de estilos de citación.
 """
 
-from app.services.citation_style_detector_service import detectar_estilo_citacion, obtener_descripcion_estilo
+from app.services.obtener.citation_style_detector_service import detectar_estilo_citacion, obtener_descripcion_estilo
 
 # Casos de prueba con diferentes estilos
 

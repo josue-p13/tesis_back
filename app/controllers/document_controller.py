@@ -1,11 +1,11 @@
 from fastapi import APIRouter, UploadFile, File, HTTPException, Query
 from typing import Dict, Any
 
-from app.services.document_service import extraer_referencias_grobid
-from app.services.file_generator_service import generar_txt_referencias, generar_txt_resumen, generar_txt_validacion
-from app.services.citation_style_detector_service import detectar_estilo_citacion, obtener_descripcion_estilo
-from app.services.database_service import DatabaseService
-from app.services.validacion_referencias_service import validar_referencias
+from app.services.obtener.document_service import extraer_referencias_grobid
+from app.services.db.file_generator_service import generar_txt_referencias, generar_txt_resumen, generar_txt_validacion
+from app.services.obtener.citation_style_detector_service import detectar_estilo_citacion, obtener_descripcion_estilo
+from app.services.db.database_service import DatabaseService
+from app.services.verificador.validacion_referencias_service import validar_referencias
 
 
 router = APIRouter()
@@ -24,8 +24,8 @@ async def extraer_referencias(
         )
     
     try:
-        # Extraer referencias y guardar en BD
-        referencias_extraidas, estadisticas_bd = await extraer_referencias_grobid(pdf, guardar_en_bd)
+        # Extraer referencias SIN guardar en BD (lo hará la validación)
+        referencias_extraidas, _ = await extraer_referencias_grobid(pdf, guardar_en_bd=False)
         
         # Detectar estilo de citación
         estilo_citacion = detectar_estilo_citacion(referencias_extraidas)
@@ -55,17 +55,17 @@ async def extraer_referencias(
             }
         }
         
-        # Agregar estadísticas de BD si se guardaron referencias
-        if guardar_en_bd and estadisticas_bd:
-            response["base_de_datos"] = estadisticas_bd
-
-        # Si validar=True, usa las referencias ya extraídas directamente — sin construir JSON a mano
+        # Si validar=True, usa las referencias ya extraídas directamente
+        # Las estadísticas de BD ahora vienen desde la validación
         if validar and referencias_extraidas:
             resultado_validacion = await validar_referencias(referencias_extraidas)
             nombre_txt_validacion = f"validacion_{nombre_base}.txt"
             ruta_validacion = generar_txt_validacion(resultado_validacion, nombre_txt_validacion)
             response["archivos_generados"]["validacion"] = ruta_validacion
             response["validacion"] = resultado_validacion
+            # Agregar estadísticas de BD desde validación
+            if resultado_validacion.get("estadisticas_bd"):
+                response["base_de_datos"] = resultado_validacion["estadisticas_bd"]
         
         return response
     
