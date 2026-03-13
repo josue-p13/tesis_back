@@ -1,135 +1,107 @@
-from fastapi import APIRouter, UploadFile, File, HTTPException, Query
-from typing import Dict, Any
+from fastapi import APIRouter, UploadFile, File, HTTPException, Form
+from typing import Any, Dict, List
 
 from app.services.obtener.document_service import extraer_referencias_grobid
-from app.services.db.file_generator_service import generar_txt_referencias, generar_txt_resumen, generar_txt_validacion
 from app.services.obtener.citation_style_detector_service import detectar_estilo_citacion, obtener_descripcion_estilo
-from app.services.db.database_service import DatabaseService
 from app.services.verificador.validacion_referencias_service import validar_referencias
 
 
 router = APIRouter()
 
 
-@router.post("/extraer-referencias")
+# ─────────────────────────────────────────────────────────────────────────────
+# POST /documents/extraer
+# Recibe: PDF + serper_api_key + usar_serper
+# Devuelve: referencias extraídas del PDF + estilo de citación
+# ─────────────────────────────────────────────────────────────────────────────
+
+@router.post("/extraer")
 async def extraer_referencias(
-    pdf: UploadFile = File(...), 
-    guardar_en_bd: bool = Query(True, description="Guardar referencias en base de datos"),
-    validar: bool = Query(True, description="Validar referencias")
+    pdf: UploadFile = File(..., description="Archivo PDF a procesar"),
+    serper_api_key: str = Form("", description="API Key de Serper.dev (opcional)"),
+    usar_serper: bool = Form(False, description="Activar búsqueda en Google Scholar via Serper"),
 ) -> Dict[str, Any]:
+    """
+    Extrae las referencias bibliográficas de un PDF usando GROBID.
+
+    - Recibe el PDF como multipart/form-data.
+    - Devuelve las referencias crudas extraídas y el estilo de citación detectado.
+    - serper_api_key y usar_serper se guardan en la respuesta para que el front
+      los reenvíe al endpoint /validar sin necesidad de pedírselos de nuevo al usuario.
+    """
     if pdf.content_type != "application/pdf":
         raise HTTPException(
-            status_code=400, 
-            detail="El archivo debe ser un PDF"
+            status_code=400,
+            detail="El archivo debe ser un PDF (content-type: application/pdf)"
         )
-    
+
     try:
-        # Extraer referencias SIN guardar en BD (lo hará la validación)
         referencias_extraidas, _ = await extraer_referencias_grobid(pdf, guardar_en_bd=False)
-        
-        # Detectar estilo de citación
+
         estilo_citacion = detectar_estilo_citacion(referencias_extraidas)
         descripcion_estilo = obtener_descripcion_estilo(estilo_citacion)
-        
-        # Generar archivos TXT
-        nombre_base = (pdf.filename or "documento").replace('.pdf', '')
-        
-        # Archivo completo con todos los detalles
-        nombre_txt_completo = f"referencias_{nombre_base}.txt"
-        ruta_completo = generar_txt_referencias(referencias_extraidas, nombre_txt_completo)
-        
-        # Archivo resumido solo con autores, título, publicación y año
-        nombre_txt_resumen = f"resumen_{nombre_base}.txt"
-        ruta_resumen = generar_txt_resumen(referencias_extraidas, nombre_txt_resumen)
-        
-        response = {
+
+        return {
             "total_referencias": len(referencias_extraidas),
             "estilo_citacion": {
                 "nombre": estilo_citacion,
-                "descripcion": descripcion_estilo
+                "descripcion": descripcion_estilo,
             },
             "referencias": referencias_extraidas,
-            "archivos_generados": {
-                "completo": ruta_completo,
-                "resumen": ruta_resumen
-            }
+            # Devolvemos los parámetros de Serper para que el front los reenvíe a /validar
+            "serper_api_key": serper_api_key,
+            "usar_serper": usar_serper,
         }
-        
-        # Si validar=True, usa las referencias ya extraídas directamente
-        # Las estadísticas de BD ahora vienen desde la validación
-        if validar and referencias_extraidas:
-            resultado_validacion = await validar_referencias(referencias_extraidas)
-            nombre_txt_validacion = f"validacion_{nombre_base}.txt"
-            ruta_validacion = generar_txt_validacion(resultado_validacion, nombre_txt_validacion)
-            response["archivos_generados"]["validacion"] = ruta_validacion
-            response["validacion"] = resultado_validacion
-            # Agregar estadísticas de BD desde validación
-            if resultado_validacion.get("estadisticas_bd"):
-                response["base_de_datos"] = resultado_validacion["estadisticas_bd"]
-        
-        return response
-    
+
     except Exception as e:
         raise HTTPException(
             status_code=500,
-            detail=f"Error al procesar el documento: {str(e)}"
+            detail=f"Error al procesar el PDF: {str(e)}"
         )
 
 
-@router.get("/referencias")
-async def listar_referencias(
-    query: str = Query("", description="Búsqueda por texto"),
-    limit: int = Query(100, description="Número máximo de resultados", ge=1, le=500),
-    offset: int = Query(0, description="Offset para paginación", ge=0)
+# ─────────────────────────────────────────────────────────────────────────────
+# POST /documents/validar
+# Recibe: lista de referencias (JSON) + serper_api_key + usar_serper
+# Devuelve: resultado completo de validación por cada referencia
+# ─────────────────────────────────────────────────────────────────────────────
+
+@router.post("/validar")
+async def validar_referencias_endpoint(
+    body: Dict[str, Any],
 ) -> Dict[str, Any]:
     """
-    Lista las referencias almacenadas en la base de datos.
-    
-    Args:
-        query: Texto de búsqueda (busca en título, autores, publicación)
-        limit: Número máximo de resultados
-        offset: Offset para paginación
-        
-    Returns:
-        JSON con las referencias encontradas
+    Valida las referencias contra APIs académicas externas.
+
+    Body JSON esperado:
+    {
+        "referencias": [...],       // lista de referencias obtenidas de /extraer
+        "serper_api_key": "...",    // API Key de Serper.dev (string, puede ser "")
+        "usar_serper": true/false   // si se debe usar Google Scholar como último recurso
+    }
+
+    Devuelve el resultado de la validación: estado por referencia, fuente, DOI encontrado, etc.
     """
+    referencias: List[Dict] = body.get("referencias", [])
+    serper_api_key: str = body.get("serper_api_key", "")
+    usar_serper: bool = bool(body.get("usar_serper", False))
+
+    if not referencias:
+        raise HTTPException(
+            status_code=400,
+            detail="El campo 'referencias' es obligatorio y no puede estar vacío"
+        )
+
     try:
-        with DatabaseService() as db:
-            referencias = db.buscar_referencias(query, limit, offset)
-            
-        return {
-            "total_resultados": len(referencias),
-            "query": query,
-            "limit": limit,
-            "offset": offset,
-            "referencias": referencias
-        }
-    
+        resultado = await validar_referencias(
+            referencias,
+            serper_api_key=serper_api_key,
+            usar_serper=usar_serper,
+        )
+        return resultado
+
     except Exception as e:
         raise HTTPException(
             status_code=500,
-            detail=f"Error al buscar referencias: {str(e)}"
+            detail=f"Error al validar las referencias: {str(e)}"
         )
-
-
-@router.get("/estadisticas")
-async def obtener_estadisticas() -> Dict[str, Any]:
-    """
-    Obtiene estadísticas de las referencias almacenadas.
-    
-    Returns:
-        JSON con estadísticas
-    """
-    try:
-        with DatabaseService() as db:
-            estadisticas = db.obtener_estadisticas()
-            
-        return estadisticas
-    
-    except Exception as e:
-        raise HTTPException(
-            status_code=500,
-            detail=f"Error al obtener estadísticas: {str(e)}"
-        )
-
-

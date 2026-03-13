@@ -1,0 +1,541 @@
+{
+  "_descripcion": "Contrato de la API — Sistema de Extracción y Validación de Referencias Bibliográficas",
+  "_version": "2.0.0",
+  "_base_url": "http://localhost:8000",
+
+  "endpoints": {
+
+    "1_extraer_referencias": {
+      "metodo": "POST",
+      "url": "/documents/extraer",
+      "descripcion": "Extrae las referencias bibliográficas de un PDF usando GROBID. No valida nada, solo extrae.",
+      "content_type_request": "multipart/form-data",
+
+      "request": {
+        "campos_form_data": {
+          "pdf": {
+            "tipo": "File (binario)",
+            "obligatorio": true,
+            "descripcion": "Archivo PDF a procesar",
+            "content_type_esperado": "application/pdf"
+          },
+          "serper_api_key": {
+            "tipo": "string",
+            "obligatorio": false,
+            "default": "",
+            "descripcion": "API Key del usuario en Serper.dev (https://serper.dev). Se usa en el paso de validacion si usar_serper=true. Puede enviarse vacia si no se quiere usar Google Scholar."
+          },
+          "usar_serper": {
+            "tipo": "boolean",
+            "obligatorio": false,
+            "default": false,
+            "descripcion": "Si es true, la validacion usara Google Scholar via Serper como ultimo recurso. Requiere que serper_api_key no este vacia."
+          }
+        }
+      },
+
+      "response": {
+        "status_code_ok": 200,
+        "content_type": "application/json",
+        "estructura": {
+          "total_referencias": {
+            "tipo": "integer",
+            "descripcion": "Numero total de referencias encontradas en el PDF",
+            "ejemplo": 42
+          },
+          "estilo_citacion": {
+            "tipo": "object",
+            "descripcion": "Estilo de citacion detectado automaticamente",
+            "campos": {
+              "nombre": {
+                "tipo": "string",
+                "valores_posibles": ["IEEE", "APA", "Harvard", "ACM", "Vancouver", "MLA", "Desconocido"],
+                "ejemplo": "IEEE"
+              },
+              "descripcion": {
+                "tipo": "string",
+                "ejemplo": "Institute of Electrical and Electronics Engineers"
+              }
+            }
+          },
+          "referencias": {
+            "tipo": "array de objetos",
+            "descripcion": "Lista de referencias extraidas del PDF. Cada objeto tiene los siguientes campos:",
+            "campos_por_referencia": {
+              "raw": {
+                "tipo": "string",
+                "descripcion": "Texto original de la referencia tal como aparece en el PDF",
+                "ejemplo": "[1] J. Smith, \"Deep Learning Methods,\" IEEE Trans., vol. 12, pp. 45-67, 2021."
+              },
+              "titulo": {
+                "tipo": "string",
+                "descripcion": "Titulo extraido de la referencia",
+                "ejemplo": "Deep Learning Methods for Image Recognition"
+              },
+              "autores": {
+                "tipo": "string",
+                "descripcion": "Autores separados por coma",
+                "ejemplo": "John Smith, Maria Garcia, Wei Chen"
+              },
+              "año": {
+                "tipo": "string",
+                "descripcion": "Anio de publicacion (4 digitos, entre 1900 y 2030)",
+                "ejemplo": "2021"
+              },
+              "publicacion": {
+                "tipo": "string",
+                "descripcion": "Nombre de la revista, conferencia o libro",
+                "ejemplo": "IEEE Transactions on Neural Networks"
+              },
+              "doi": {
+                "tipo": "string",
+                "descripcion": "DOI si fue encontrado en el PDF, vacio si no",
+                "ejemplo": "10.1109/TNN.2021.123456"
+              },
+              "url": {
+                "tipo": "string",
+                "descripcion": "URL si la referencia contiene un enlace, vacio si no",
+                "ejemplo": "https://arxiv.org/abs/2101.12345"
+              },
+              "volumen": {
+                "tipo": "string",
+                "descripcion": "Volumen de la publicacion, vacio si no aplica",
+                "ejemplo": "12"
+              },
+              "paginas": {
+                "tipo": "string",
+                "descripcion": "Rango de paginas en formato 'inicio-fin', vacio si no aplica",
+                "ejemplo": "45-67"
+              }
+            }
+          },
+          "serper_api_key": {
+            "tipo": "string",
+            "descripcion": "Eco de la serper_api_key recibida, para que el front la reenvie directamente a /validar sin tener que pedirla de nuevo al usuario",
+            "ejemplo": "abc123xyz..."
+          },
+          "usar_serper": {
+            "tipo": "boolean",
+            "descripcion": "Eco del flag usar_serper recibido, para que el front lo reenvie a /validar",
+            "ejemplo": true
+          }
+        }
+      },
+
+      "errores": {
+        "400": "El archivo enviado no es un PDF (content-type incorrecto)",
+        "500": "Error interno al procesar el PDF (GROBID no disponible, PDF corrupto, etc.)"
+      },
+
+      "ejemplo_respuesta_completa": {
+        "total_referencias": 2,
+        "estilo_citacion": {
+          "nombre": "IEEE",
+          "descripcion": "Institute of Electrical and Electronics Engineers"
+        },
+        "referencias": [
+          {
+            "raw": "[1] J. Smith, \"Deep Learning,\" IEEE Trans., vol. 12, pp. 45-67, 2021.",
+            "titulo": "Deep Learning Methods for Image Recognition",
+            "autores": "John Smith, Maria Garcia",
+            "año": "2021",
+            "publicacion": "IEEE Transactions on Neural Networks",
+            "doi": "10.1109/TNN.2021.123456",
+            "url": "",
+            "volumen": "12",
+            "paginas": "45-67"
+          },
+          {
+            "raw": "[2] A. Brown, \"NLP Survey,\" arXiv, 2020. [Online]. Available: https://arxiv.org/abs/2001.00001",
+            "titulo": "A Survey of Natural Language Processing",
+            "autores": "Alice Brown",
+            "año": "2020",
+            "publicacion": "arXiv preprint",
+            "doi": "",
+            "url": "https://arxiv.org/abs/2001.00001",
+            "volumen": "",
+            "paginas": ""
+          }
+        ],
+        "serper_api_key": "mi_api_key_de_serper",
+        "usar_serper": true
+      }
+    },
+
+    "2_validar_referencias": {
+      "metodo": "POST",
+      "url": "/documents/validar",
+      "descripcion": "Valida las referencias contra APIs academicas externas (OpenAlex, CrossRef, Semantic Scholar, PubMed, CORE, Google Books) y opcionalmente Google Scholar via Serper. Retorna el resultado de la validacion por cada referencia.",
+      "content_type_request": "application/json",
+
+      "request": {
+        "body_json": {
+          "referencias": {
+            "tipo": "array de objetos",
+            "obligatorio": true,
+            "descripcion": "Lista de referencias a validar. Usar directamente el campo 'referencias' de la respuesta de /extraer.",
+            "estructura": "igual a la estructura de referencias en la respuesta de /extraer"
+          },
+          "serper_api_key": {
+            "tipo": "string",
+            "obligatorio": false,
+            "default": "",
+            "descripcion": "API Key de Serper.dev. Solo necesaria si usar_serper es true. Usar el valor recibido en la respuesta de /extraer."
+          },
+          "usar_serper": {
+            "tipo": "boolean",
+            "obligatorio": false,
+            "default": false,
+            "descripcion": "Si es true, activa Google Scholar via Serper como ultimo recurso de busqueda para referencias no encontradas en otras APIs."
+          }
+        }
+      },
+
+      "response": {
+        "status_code_ok": 200,
+        "content_type": "application/json",
+        "estructura": {
+          "total": {
+            "tipo": "integer",
+            "descripcion": "Total de referencias procesadas",
+            "ejemplo": 42
+          },
+          "encontradas": {
+            "tipo": "integer",
+            "descripcion": "Referencias verificadas exitosamente (en cualquier fuente)",
+            "ejemplo": 36
+          },
+          "no_encontradas": {
+            "tipo": "integer",
+            "descripcion": "Referencias que no pudieron verificarse en ninguna fuente",
+            "ejemplo": 6
+          },
+          "con_doi_original": {
+            "tipo": "integer",
+            "descripcion": "Referencias que ya traian DOI en el PDF",
+            "ejemplo": 20
+          },
+          "sin_doi_original": {
+            "tipo": "integer",
+            "descripcion": "Referencias sin DOI en el PDF",
+            "ejemplo": 22
+          },
+          "porcentaje_verificadas": {
+            "tipo": "float",
+            "descripcion": "Porcentaje de referencias verificadas (1 decimal)",
+            "ejemplo": 85.7
+          },
+          "estadisticas_bd": {
+            "tipo": "object",
+            "campos": {
+              "servidas_desde_bd": {
+                "tipo": "integer",
+                "descripcion": "Referencias encontradas en la cache local (PostgreSQL) sin llamar a APIs externas",
+                "ejemplo": 5
+              },
+              "nuevas_guardadas_en_bd": {
+                "tipo": "integer",
+                "descripcion": "Referencias nuevas verificadas y guardadas en la BD para futuras consultas",
+                "ejemplo": 31
+              }
+            }
+          },
+          "estadisticas_google_scholar": {
+            "tipo": "object",
+            "campos": {
+              "encontradas_por_serper": {
+                "tipo": "integer",
+                "descripcion": "Referencias encontradas exclusivamente via Google Scholar (Serper)",
+                "ejemplo": 3
+              },
+              "serper_habilitado": {
+                "tipo": "boolean",
+                "descripcion": "Refleja si Serper fue activado en esta validacion",
+                "ejemplo": true
+              }
+            }
+          },
+          "referencias": {
+            "tipo": "array de objetos",
+            "descripcion": "Resultado de validacion por cada referencia. Mismo orden que la lista enviada.",
+            "campos_por_referencia": {
+              "indice": {
+                "tipo": "integer",
+                "descripcion": "Posicion de la referencia (1-based)",
+                "ejemplo": 1
+              },
+              "titulo_original": {
+                "tipo": "string",
+                "descripcion": "Titulo tal como vino del PDF",
+                "ejemplo": "Deep Learning Methods for Image Recognition"
+              },
+              "autores": {
+                "tipo": "string",
+                "descripcion": "Autores tal como vinieron del PDF",
+                "ejemplo": "John Smith, Maria Garcia"
+              },
+              "año": {
+                "tipo": "string",
+                "descripcion": "Anio tal como vino del PDF",
+                "ejemplo": "2021"
+              },
+              "doi_original": {
+                "tipo": "string",
+                "descripcion": "DOI tal como vino del PDF (vacio si no tenia)",
+                "ejemplo": "10.1109/TNN.2021.123456"
+              },
+              "estado": {
+                "tipo": "string",
+                "descripcion": "Resultado de la validacion",
+                "valores_posibles": {
+                  "VERIFICADA": "Encontrada por DOI en APIs academicas",
+                  "VERIFICADA (BD)": "Encontrada en la cache local por DOI o titulo similar",
+                  "VERIFICADA (BD por score)": "Encontrada en la cache local por scoring combinado (titulo+año+autores+raw)",
+                  "ENCONTRADA_POR_TITULO": "No tenia DOI, encontrada por titulo en APIs academicas",
+                  "ENCONTRADA_POR_TITULO (DOI fallido)": "Tenia DOI pero fallo, encontrada por titulo",
+                  "ENCONTRADA_GOOGLE_SCHOLAR": "Encontrada via Serper/Google Scholar como ultimo recurso",
+                  "DOI_NO_ENCONTRADO": "Tenia DOI pero no se encontro en ninguna API",
+                  "REFERENCIA_WEB": "Era una URL y respondio HTTP 200 correctamente",
+                  "URL_NO_ACCESIBLE": "Era una URL pero no responde o devuelve error",
+                  "NO_ENCONTRADA": "Sin DOI y no encontrada por titulo en ninguna fuente",
+                  "SIN_DATOS_PARA_BUSCAR": "No tiene titulo, DOI ni URL — no hay nada que buscar"
+                }
+              },
+              "doi_sugerido": {
+                "tipo": "string",
+                "descripcion": "DOI encontrado por las APIs (solo presente si se encontro y no lo tenia el PDF). Campo OPCIONAL, puede no estar presente.",
+                "ejemplo": "10.1109/TNN.2021.123456"
+              },
+              "validacion": {
+                "tipo": "object",
+                "descripcion": "Detalle del resultado de la validacion",
+                "campos": {
+                  "encontrado": {
+                    "tipo": "boolean",
+                    "descripcion": "true si la referencia fue verificada",
+                    "ejemplo": true
+                  },
+                  "fuente": {
+                    "tipo": "string",
+                    "descripcion": "API o fuente donde se encontro la referencia",
+                    "valores_posibles": [
+                      "OpenAlex",
+                      "CrossRef",
+                      "Semantic Scholar",
+                      "PubMed",
+                      "CORE",
+                      "Google Books",
+                      "Google Scholar (Serper)",
+                      "OpenAlex (desde BD)",
+                      "CrossRef (desde BD)",
+                      "URL web"
+                    ],
+                    "ejemplo": "OpenAlex"
+                  },
+                  "titulo_verificado": {
+                    "tipo": "string",
+                    "descripcion": "Titulo oficial segun la fuente que la verifico",
+                    "ejemplo": "Deep Learning Methods for Image Recognition in Medical Imaging"
+                  },
+                  "doi_encontrado": {
+                    "tipo": "string",
+                    "descripcion": "DOI oficial segun la fuente (puede diferir del doi_original del PDF)",
+                    "ejemplo": "10.1109/TNN.2021.123456"
+                  },
+                  "citaciones": {
+                    "tipo": "integer",
+                    "descripcion": "Numero de citas segun la fuente (0 si no esta disponible)",
+                    "ejemplo": 142
+                  },
+                  "url": {
+                    "tipo": "string",
+                    "descripcion": "URL del articulo en la fuente (puede ser DOI resolver o link directo)",
+                    "ejemplo": "https://doi.org/10.1109/TNN.2021.123456"
+                  },
+                  "autores_verificados": {
+                    "tipo": "string",
+                    "descripcion": "Autores segun la fuente que la verifico",
+                    "ejemplo": "John Smith, Maria Garcia, Wei Chen"
+                  },
+                  "desde_bd": {
+                    "tipo": "boolean",
+                    "descripcion": "true si la referencia vino de la cache local (solo presente cuando es true)",
+                    "ejemplo": true
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+
+      "errores": {
+        "400": "El campo 'referencias' esta vacio o no fue enviado",
+        "500": "Error interno al validar (fallo de red, BD no disponible, etc.)"
+      },
+
+      "ejemplo_request": {
+        "referencias": [
+          {
+            "raw": "[1] J. Smith, \"Deep Learning,\" IEEE Trans., vol. 12, pp. 45-67, 2021.",
+            "titulo": "Deep Learning Methods for Image Recognition",
+            "autores": "John Smith, Maria Garcia",
+            "año": "2021",
+            "publicacion": "IEEE Transactions on Neural Networks",
+            "doi": "10.1109/TNN.2021.123456",
+            "url": "",
+            "volumen": "12",
+            "paginas": "45-67"
+          },
+          {
+            "raw": "[2] A. Brown, \"NLP Survey,\" arXiv, 2020.",
+            "titulo": "A Survey of Natural Language Processing",
+            "autores": "Alice Brown",
+            "año": "2020",
+            "publicacion": "arXiv preprint",
+            "doi": "",
+            "url": "https://arxiv.org/abs/2001.00001",
+            "volumen": "",
+            "paginas": ""
+          }
+        ],
+        "serper_api_key": "mi_api_key_de_serper",
+        "usar_serper": true
+      },
+
+      "ejemplo_respuesta_completa": {
+        "total": 2,
+        "encontradas": 2,
+        "no_encontradas": 0,
+        "con_doi_original": 1,
+        "sin_doi_original": 1,
+        "porcentaje_verificadas": 100.0,
+        "estadisticas_bd": {
+          "servidas_desde_bd": 0,
+          "nuevas_guardadas_en_bd": 2
+        },
+        "estadisticas_google_scholar": {
+          "encontradas_por_serper": 0,
+          "serper_habilitado": true
+        },
+        "referencias": [
+          {
+            "indice": 1,
+            "titulo_original": "Deep Learning Methods for Image Recognition",
+            "autores": "John Smith, Maria Garcia",
+            "año": "2021",
+            "doi_original": "10.1109/TNN.2021.123456",
+            "estado": "VERIFICADA",
+            "doi_sugerido": "10.1109/TNN.2021.123456",
+            "validacion": {
+              "encontrado": true,
+              "fuente": "OpenAlex",
+              "titulo_verificado": "Deep Learning Methods for Image Recognition in Medical Imaging",
+              "doi_encontrado": "10.1109/TNN.2021.123456",
+              "citaciones": 142,
+              "url": "https://doi.org/10.1109/TNN.2021.123456",
+              "autores_verificados": "John Smith, Maria Garcia, Wei Chen"
+            }
+          },
+          {
+            "indice": 2,
+            "titulo_original": "A Survey of Natural Language Processing",
+            "autores": "Alice Brown",
+            "año": "2020",
+            "doi_original": "",
+            "estado": "VERIFICADA",
+            "doi_sugerido": "10.48550/arXiv.2001.00001",
+            "validacion": {
+              "encontrado": true,
+              "fuente": "Semantic Scholar",
+              "titulo_verificado": "A Comprehensive Survey of Natural Language Processing",
+              "doi_encontrado": "10.48550/arXiv.2001.00001",
+              "citaciones": 87,
+              "url": "https://arxiv.org/abs/2001.00001",
+              "autores_verificados": "Alice Brown"
+            }
+          }
+        ]
+      }
+    },
+
+    "3_listar_referencias_bd": {
+      "metodo": "GET",
+      "url": "/documents/referencias",
+      "descripcion": "Lista y busca referencias almacenadas en la base de datos PostgreSQL (cache de referencias ya verificadas).",
+
+      "request": {
+        "query_params": {
+          "query": {
+            "tipo": "string",
+            "obligatorio": false,
+            "default": "",
+            "descripcion": "Texto a buscar en titulo, autores y publicacion (busqueda ILIKE, insensible a mayusculas)"
+          },
+          "limit": {
+            "tipo": "integer",
+            "obligatorio": false,
+            "default": 100,
+            "rango": "1 a 500",
+            "descripcion": "Maximo de resultados a devolver"
+          },
+          "offset": {
+            "tipo": "integer",
+            "obligatorio": false,
+            "default": 0,
+            "descripcion": "Offset para paginacion"
+          }
+        }
+      },
+
+      "response": {
+        "status_code_ok": 200,
+        "estructura": {
+          "total_resultados": "integer — cantidad de resultados devueltos",
+          "query": "string — texto buscado",
+          "limit": "integer — limite aplicado",
+          "offset": "integer — offset aplicado",
+          "referencias": "array — registros de la tabla PostgreSQL"
+        }
+      }
+    },
+
+    "4_estadisticas_bd": {
+      "metodo": "GET",
+      "url": "/documents/estadisticas",
+      "descripcion": "Retorna estadisticas globales de las referencias almacenadas en PostgreSQL (desde la vista SQL 'estadisticas_referencias').",
+      "request": "Sin parametros",
+      "response": {
+        "status_code_ok": 200,
+        "descripcion": "JSON con estadisticas de la BD (campos definidos por la vista SQL)"
+      }
+    }
+  },
+
+  "flujo_recomendado_para_el_front": {
+    "paso_1": {
+      "accion": "Usuario sube el PDF + ingresa su Serper API Key + activa/desactiva Serper",
+      "llamada": "POST /documents/extraer (multipart/form-data)",
+      "resultado": "Front recibe las referencias crudas + estilo de citacion + eco de serper_api_key y usar_serper"
+    },
+    "paso_2": {
+      "accion": "Front muestra las referencias extraidas al usuario",
+      "llamada": "ninguna — solo renderizar los datos de paso_1"
+    },
+    "paso_3": {
+      "accion": "Usuario solicita validar las referencias",
+      "llamada": "POST /documents/validar (application/json)",
+      "body": "{ referencias: <del paso_1>, serper_api_key: <del paso_1>, usar_serper: <del paso_1> }",
+      "resultado": "Front recibe la validacion completa con estado, fuente, DOI y citaciones por cada referencia"
+    }
+  },
+
+  "notas_importantes": {
+    "serper": "La serper_api_key NUNCA se guarda en el servidor. Llega en el request y se usa en esa peticion solamente. El usuario puede obtener su key gratuita en https://serper.dev",
+    "tiempo_de_respuesta": "POST /extraer tarda aprox 5-30 segundos segun el tamaño del PDF. POST /validar puede tardar varios minutos para PDFs con muchas referencias (procesa en paralelo pero son muchas llamadas a APIs externas).",
+    "GROBID": "El back requiere que GROBID este corriendo en localhost:8070. Si GROBID no esta disponible, /extraer devolvera error 500.",
+    "campos_opcionales": "Algunos campos de la referencia (doi, url, volumen, paginas) pueden venir como string vacio si no fueron encontrados en el PDF. El front debe manejar strings vacios.",
+    "doi_sugerido": "El campo 'doi_sugerido' en la validacion solo aparece si la referencia no tenia DOI en el PDF pero se encontro uno. Es un campo OPCIONAL.",
+    "validacion_campo": "El campo 'validacion' dentro de cada referencia validada siempre existe, pero si no se encontro nada, solo tendra { 'encontrado': false }."
+  }
+}

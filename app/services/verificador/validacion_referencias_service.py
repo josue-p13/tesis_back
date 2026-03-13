@@ -14,7 +14,6 @@ from app.services.verificador import (
 )
 from app.services.verificador.http_client import HTTP_CLIENT
 from app.services.db.database_service import DatabaseService
-from app.core.config import config
 
 
 # ──────────────────────────── búsqueda en BD local (caché) ────────────────────────────
@@ -293,16 +292,17 @@ async def buscar_por_titulo(titulo: str, autores: str = "") -> Dict[str, Any]:
     return resultado
 
 
-async def buscar_por_serper(titulo: str, autores: str = "") -> Dict[str, Any]:
+async def buscar_por_serper(titulo: str, autores: str = "", serper_api_key: str = "", usar_serper: bool = False) -> Dict[str, Any]:
     """
     Último recurso: Google Scholar via Serper.
-    Solo se llama cuando BD + APIs + Gemini-BD ya fallaron.
+    Solo se llama cuando BD + APIs ya fallaron.
+    La api key y el flag llegan como parámetros desde el front.
     """
     resultado = {"titulo_buscado": titulo, "encontrado": False}
-    if not config.USAR_SERPER:
+    if not usar_serper or not serper_api_key:
         return resultado
     t = await traducir_si_es_espanol(titulo)
-    datos_serper = await serper.buscar_titulo_google_scholar(t, autores)
+    datos_serper = await serper.buscar_titulo_google_scholar(t, autores, serper_api_key=serper_api_key)
     if datos_serper and datos_serper.get("encontrado"):
         resultado.update({
             "encontrado": True,
@@ -336,7 +336,12 @@ async def _verificar_url(url: str) -> bool:
 
 # ──────────────────────────── validación individual y masiva ────────────────────────────
 
-async def _validar_referencia_individual(ref: Dict[str, Any], indice: int) -> Dict[str, Any]:
+async def _validar_referencia_individual(
+    ref: Dict[str, Any],
+    indice: int,
+    serper_api_key: str = "",
+    usar_serper: bool = False,
+) -> Dict[str, Any]:
     resultado = {
         "indice": indice + 1,
         "titulo_original": ref.get("titulo", "Sin título"),
@@ -399,7 +404,7 @@ async def _validar_referencia_individual(ref: Dict[str, Any], indice: int) -> Di
         resultado["estado"]     = "REFERENCIA_WEB" if url_accesible else "URL_NO_ACCESIBLE"
         resultado["validacion"] = {"encontrado": url_accesible, "fuente": "URL web", "url": url_ref}
         resultado["con_doi"]    = False
-        return resultado  # URLs web no pasan por Gemini ni Serper
+        return resultado  # URLs web no pasan por Serper
 
     elif ref.get("titulo"):
         datos = await buscar_por_titulo(ref["titulo"], ref.get("autores", ""))
@@ -439,12 +444,16 @@ async def _validar_referencia_individual(ref: Dict[str, Any], indice: int) -> Di
         return resultado
 
     # ═══════════════════════════════════════════════════════════
-    # PASO 4: SERPER — último recurso
+    # PASO 4: SERPER — último recurso (api key y flag vienen del front)
     # ═══════════════════════════════════════════════════════════
     titulo_buscar = ref.get("titulo", "")
-    if titulo_buscar and config.USAR_SERPER:
+    if titulo_buscar and usar_serper and serper_api_key:
         print(f"[Serper] Ultimo recurso para: {titulo_buscar[:60]}")
-        datos_serper = await buscar_por_serper(titulo_buscar, ref.get("autores", ""))
+        datos_serper = await buscar_por_serper(
+            titulo_buscar, ref.get("autores", ""),
+            serper_api_key=serper_api_key,
+            usar_serper=usar_serper,
+        )
         if datos_serper and datos_serper.get("encontrado"):
             resultado["validacion"] = datos_serper
             resultado["estado"]     = "ENCONTRADA_GOOGLE_SCHOLAR"
@@ -458,9 +467,14 @@ async def _validar_referencia_individual(ref: Dict[str, Any], indice: int) -> Di
     return resultado
 
 
-async def validar_referencias(referencias: List[Dict]) -> Dict[str, Any]:
+async def validar_referencias(
+    referencias: List[Dict],
+    serper_api_key: str = "",
+    usar_serper: bool = False,
+) -> Dict[str, Any]:
     resultados = await asyncio.gather(*[
-        _validar_referencia_individual(ref, i) for i, ref in enumerate(referencias)
+        _validar_referencia_individual(ref, i, serper_api_key=serper_api_key, usar_serper=usar_serper)
+        for i, ref in enumerate(referencias)
     ])
 
     encontradas = no_encontradas = con_doi = sin_doi = desde_bd = guardadas_bd = desde_google_scholar = 0
@@ -499,7 +513,7 @@ async def validar_referencias(referencias: List[Dict]) -> Dict[str, Any]:
         },
         "estadisticas_google_scholar": {
             "encontradas_por_serper": desde_google_scholar,
-            "serper_habilitado": config.USAR_SERPER,
+            "serper_habilitado": usar_serper,
         },
         "referencias": list(resultados),
     }

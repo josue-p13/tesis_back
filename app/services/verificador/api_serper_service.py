@@ -1,30 +1,25 @@
 from typing import Any, Dict, Optional
 import httpx
 
-from app.core.config import config
-# No necesitamos importar _validar_resultado aquí
-
 
 SERPER_BASE_URL = "https://google.serper.dev"
 
 
-async def buscar_titulo_google_scholar(titulo: str, autores: str = "") -> Optional[Dict[str, Any]]:
+async def buscar_titulo_google_scholar(titulo: str, autores: str = "", serper_api_key: str = "") -> Optional[Dict[str, Any]]:
     """
     Busca una referencia en Google Scholar usando Serper.dev API.
+    La api key llega como parámetro (enviada por el front), no del .env.
     
     Args:
         titulo: Título de la publicación
         autores: Autores (opcional)
+        serper_api_key: API key de Serper.dev enviada por el front
         
     Returns:
         Diccionario con datos de la referencia si se encuentra, None si no
     """
-    # Verificar que Serper esté habilitado y configurado
-    if not config.USAR_SERPER:
-        return None
-    
-    if not config.SERPER_API_KEY:
-        print("Warning: SERPER_API_KEY no configurada")
+    if not serper_api_key:
+        print("Warning: SERPER_API_KEY no recibida")
         return None
     
     if not titulo:
@@ -42,7 +37,7 @@ async def buscar_titulo_google_scholar(titulo: str, autores: str = "") -> Option
         query = query[:200]
         
         headers = {
-            "X-API-KEY": config.SERPER_API_KEY,
+            "X-API-KEY": serper_api_key,
             "Content-Type": "application/json"
         }
         
@@ -77,17 +72,13 @@ async def buscar_titulo_google_scholar(titulo: str, autores: str = "") -> Option
             
             # Extraer información
             titulo_encontrado = primer_resultado.get("title", "")
-            snippet = primer_resultado.get("snippet", "")
             link = primer_resultado.get("link", "")
             
-            # Información de publicación
             # publicationInfo es un STRING con formato: "Autores - Journal, Año - url"
-            # Ejemplo: "J Ortiz, J Van Camp, S Wijaya - Public health nutrition, 2014 - cambridge.org"
             publication_info = primer_resultado.get("publicationInfo", "")
             autores_str = ""
             
             if isinstance(publication_info, str) and publication_info:
-                # Extraer autores (todo antes del primer " - ")
                 partes = publication_info.split(" - ")
                 if len(partes) > 0:
                     autores_str = partes[0].strip()
@@ -97,13 +88,12 @@ async def buscar_titulo_google_scholar(titulo: str, autores: str = "") -> Option
             if not isinstance(citaciones, int):
                 citaciones = 0
             
-            # Validar que sea una referencia válida
             resultado = {
                 "encontrado": True,
                 "fuente": "Google Scholar (Serper)",
                 "titulo": titulo_encontrado,
                 "autores": autores_str,
-                "doi": "",  # Google Scholar no siempre proporciona DOI directo
+                "doi": "",
                 "citaciones": citaciones,
                 "url": link,
             }
@@ -118,22 +108,23 @@ async def buscar_titulo_google_scholar(titulo: str, autores: str = "") -> Option
         return None
 
 
-async def buscar_doi_google_scholar(doi: str) -> Optional[Dict[str, Any]]:
+async def buscar_doi_google_scholar(doi: str, serper_api_key: str = "") -> Optional[Dict[str, Any]]:
     """
     Busca una referencia por DOI en Google Scholar usando Serper.dev.
     
     Args:
         doi: DOI a buscar
+        serper_api_key: API key de Serper.dev enviada por el front
         
     Returns:
         Diccionario con datos de la referencia si se encuentra, None si no
     """
-    if not config.USAR_SERPER or not config.SERPER_API_KEY or not doi:
+    if not serper_api_key or not doi:
         return None
     
     try:
         headers = {
-            "X-API-KEY": config.SERPER_API_KEY,
+            "X-API-KEY": serper_api_key,
             "Content-Type": "application/json"
         }
         
@@ -162,7 +153,6 @@ async def buscar_doi_google_scholar(doi: str) -> Optional[Dict[str, Any]]:
             
             primer_resultado = organic_results[0]
             
-            # Citaciones - viene directamente como número
             citaciones = primer_resultado.get("citedBy", 0)
             if not isinstance(citaciones, int):
                 citaciones = 0
