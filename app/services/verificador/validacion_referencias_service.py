@@ -1,5 +1,5 @@
 import asyncio
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List, Optional, Tuple
 
 from app.services.obtener.text_utils_service import _similitud_titulos, _extraer_arxiv_id, _resultado_base, _normalizar
 from app.services.language_service import traducir_si_es_espanol
@@ -12,6 +12,7 @@ from app.services.verificador import (
     api_googlebooks_service    as gbooks,
     api_serper_service         as serper,
 )
+from app.services.verificador.api_serper_service import SerperAuthError
 from app.services.verificador.http_client import HTTP_CLIENT
 from app.services.db.database_service import DatabaseService
 
