@@ -5,6 +5,7 @@ from typing import List, Dict, Optional, Tuple
 from datetime import datetime
 
 from app.core.config import config
+from app.services.obtener.text_utils_service import _normalizar
 
 
 class DatabaseService:
@@ -32,23 +33,24 @@ class DatabaseService:
             return False
     
     def _crear_columnas_verificacion(self):
-        """Crea las columnas de verificación si no existen"""
+        """Crea las columnas de verificación y normalización si no existen"""
         if not self.connection:
             return
         
         try:
             with self.connection.cursor() as cursor:
-                # Agregar columnas para datos de verificación
                 cursor.execute("""
                     ALTER TABLE referencias 
                     ADD COLUMN IF NOT EXISTS fuente_verificacion VARCHAR(100),
                     ADD COLUMN IF NOT EXISTS citaciones INTEGER DEFAULT 0,
                     ADD COLUMN IF NOT EXISTS url_verificada TEXT,
-                    ADD COLUMN IF NOT EXISTS fecha_verificacion TIMESTAMP DEFAULT CURRENT_TIMESTAMP;
+                    ADD COLUMN IF NOT EXISTS fecha_verificacion TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                    ADD COLUMN IF NOT EXISTS titulo_normalizado TEXT,
+                    ADD COLUMN IF NOT EXISTS titulo_original TEXT;
                 """)
                 self.connection.commit()
         except Exception as e:
-            print(f"Nota: Columnas de verificación ya existen o error: {e}")
+            print(f"Nota: Columnas ya existen o error: {e}")
             self.connection.rollback()
     
     def desconectar(self):
@@ -58,10 +60,17 @@ class DatabaseService:
             self.connection = None
     
     def __enter__(self):
-        """Permite usar el servicio con context manager"""
-        self.conectar()
+        """Permite usar el servicio con context manager.
+        Lanza ConnectionError si no se puede conectar, para que el llamador
+        sepa que la BD no está disponible y no interprete silencio como 'no encontrado'.
+        """
+        if not self.conectar():
+            raise ConnectionError(
+                "No se pudo conectar a la base de datos. "
+                "Verifica que PostgreSQL esté activo y que las credenciales en .env sean correctas."
+            )
         return self
-    
+
     def __exit__(self, exc_type, exc_val, exc_tb):
         """Cierra la conexión al salir del context manager"""
         self.desconectar()
@@ -164,69 +173,140 @@ class DatabaseService:
     
     def buscar_por_titulo_similitud(self, titulo: str, autores: str = "") -> Optional[Dict]:
         """
-        Busca una referencia en la BD por similitud de título.
-        Usa el threshold configurado en config.py
-        
-        Args:
-            titulo: Título a buscar
-            autores: Autores (opcional, mejora precisión)
-            
-        Returns:
-            Diccionario con la referencia si existe y supera el threshold, None si no
+        Busca en la BD si ya existe una referencia con título similar.
+        Lógica simple:
+          1. Toma la primera palabra del título con más de 4 letras.
+          2. Busca todos los registros que la contengan (LIKE).
+          3. Calcula similitud exacta en Python y retorna el mejor si supera el threshold.
         """
         if not self.connection or not titulo:
             return None
-        
+
         from app.core.config import config
-        from app.services.obtener.text_utils_service import _similitud_titulos
-        
+        from app.services.obtener.text_utils_service import _similitud_titulos, _normalizar
+
         try:
+            titulo_norm = _normalizar(titulo)
+
+            # Primera palabra significativa (>4 letras) para el LIKE
+            palabra_clave = next(
+                (p for p in titulo_norm.split() if len(p) > 4),
+                titulo_norm.split()[0] if titulo_norm.split() else ""
+            )
+            if not palabra_clave:
+                return None
+
             with self.connection.cursor() as cursor:
-                # Buscar candidatos por título similar (búsqueda amplia)
                 cursor.execute(
                     """
-                    SELECT * FROM referencias 
-                    WHERE titulo ILIKE %s
-                    LIMIT 10
+                    SELECT * FROM referencias
+                    WHERE titulo_normalizado LIKE %s
+                       OR LOWER(titulo) LIKE %s
+                       OR LOWER(titulo_original) LIKE %s
+                       OR LOWER(publicacion) LIKE %s
+                    LIMIT 50
                     """,
-                    (f"%{titulo[:50]}%",)
+                    (f"%{palabra_clave}%",) * 4
                 )
-                candidatos = [dict(row) for row in cursor.fetchall()]
-                
-                # Si hay autores, también buscar por autores
-                if autores and not candidatos:
-                    cursor.execute(
-                        """
-                        SELECT * FROM referencias 
-                        WHERE autores ILIKE %s
-                        LIMIT 10
-                        """,
-                        (f"%{autores[:30]}%",)
-                    )
-                    candidatos.extend([dict(row) for row in cursor.fetchall()])
-                
-                # Calcular similitud y encontrar el mejor match
-                mejor_match = None
-                mejor_similitud = 0.0
-                
-                for candidato in candidatos:
-                    similitud = _similitud_titulos(titulo, candidato.get('titulo', ''))
-                    
-                    # Si hay autores, dar peso adicional si coinciden
-                    if autores and candidato.get('autores'):
-                        autores_similar = _similitud_titulos(autores, candidato['autores'])
-                        similitud = (similitud * 0.7) + (autores_similar * 0.3)
-                    
-                    if similitud > mejor_similitud and similitud >= config.SIMILITUD_TITULO_THRESHOLD:
-                        mejor_similitud = similitud
-                        mejor_match = candidato
-                
-                return mejor_match
-                
+                candidatos = [dict(r) for r in cursor.fetchall()]
+
+            # Calcular similitud en Python y quedarse con el mejor.
+            # Se compara el título buscado contra 'titulo', 'titulo_original' Y 'publicacion'
+            # porque Google Scholar a veces guarda el título real del paper en el campo publicacion.
+            mejor_match = None
+            mejor_sim = 0.0
+
+            for c in candidatos:
+                sim = max(
+                    _similitud_titulos(titulo, c.get('titulo', '')),
+                    _similitud_titulos(titulo, c.get('titulo_original', '') or ''),
+                    _similitud_titulos(titulo, c.get('publicacion', '') or ''),
+                )
+                if sim > mejor_sim and sim >= config.SIMILITUD_TITULO_THRESHOLD:
+                    mejor_sim = sim
+                    mejor_match = c
+
+            if mejor_match:
+                campo_match = (
+                    "titulo" if _similitud_titulos(titulo, mejor_match.get('titulo', '')) == mejor_sim
+                    else "publicacion" if _similitud_titulos(titulo, mejor_match.get('publicacion', '') or '') == mejor_sim
+                    else "titulo_original"
+                )
+                print(f"[BD] Encontrado por '{campo_match}' (similitud {mejor_sim:.0%}): {mejor_match.get('titulo', '')[:70]}")
+
+            return mejor_match
+
         except Exception as e:
-            print(f"Error al buscar por título: {e}")
+            print(f"[BD] Error al buscar por título: {e}")
             return None
-    
+
+    def obtener_candidatos_por_autores_y_raw(self, autores: str = "", texto_raw: str = "") -> list:
+        """
+        Trae candidatos de BD usando autores y/o texto_raw como ancla LIKE.
+
+        No calcula similitud de título aquí — eso lo hace Gemini en el llamador.
+        Devuelve lista de dicts (puede ser vacía). Sin duplicados por id.
+
+        Estrategia:
+          - Por autores: extrae tokens >3 letras y hace ILIKE en columna 'autores'.
+          - Por texto_raw: usa palabras clave del raw (tokens >5 letras, máx 4)
+            y hace ILIKE en 'texto_raw' Y en 'autores' (por si el raw tiene apellidos).
+        """
+        if not self.connection:
+            return []
+        if not autores and not texto_raw:
+            return []
+
+        from app.services.obtener.text_utils_service import _normalizar
+
+        try:
+            candidatos_por_id: dict = {}
+
+            with self.connection.cursor() as cursor:
+
+                # ── Por autores ───────────────────────────────────────────────
+                if autores:
+                    tokens = [t for t in _normalizar(autores).split() if len(t) > 3]
+                    for token in tokens[:4]:
+                        cursor.execute(
+                            "SELECT * FROM referencias WHERE LOWER(autores) LIKE %s LIMIT 50",
+                            (f"%{token}%",)
+                        )
+                        for row in cursor.fetchall():
+                            r = dict(row)
+                            candidatos_por_id.setdefault(r['id'], r)
+
+                # ── Por texto_raw: palabras clave del raw ─────────────────────
+                if texto_raw:
+                    tokens_raw = [
+                        t for t in _normalizar(texto_raw).split()
+                        if len(t) > 5
+                    ][:4]
+                    for token in tokens_raw:
+                        # Buscar en texto_raw guardado en BD
+                        cursor.execute(
+                            "SELECT * FROM referencias WHERE LOWER(texto_raw) LIKE %s LIMIT 50",
+                            (f"%{token}%",)
+                        )
+                        for row in cursor.fetchall():
+                            r = dict(row)
+                            candidatos_por_id.setdefault(r['id'], r)
+
+                        # También buscar esa palabra en autores (apellidos en el raw)
+                        cursor.execute(
+                            "SELECT * FROM referencias WHERE LOWER(autores) LIKE %s LIMIT 50",
+                            (f"%{token}%",)
+                        )
+                        for row in cursor.fetchall():
+                            r = dict(row)
+                            candidatos_por_id.setdefault(r['id'], r)
+
+            return list(candidatos_por_id.values())
+
+        except Exception as e:
+            print(f"[BD] Error al obtener candidatos por autores/raw: {e}")
+            return []
+
     def guardar_referencia(self, referencia: Dict, fuente_documento: str = "", 
                           datos_verificacion: Optional[Dict] = None) -> Tuple[bool, Optional[int], str]:
         """
@@ -248,10 +328,14 @@ class DatabaseService:
         autores = referencia.get('autores', '')
         año = referencia.get('año', '')
         publicacion = referencia.get('publicacion', '')
+        titulo_original = referencia.get('titulo_original', '')  # título tal como vino del PDF
         
         # Validar que al menos tenga título
         if not titulo:
             return False, None, "La referencia debe tener al menos un título"
+        
+        # Calcular título normalizado (del título verificado)
+        titulo_normalizado = _normalizar(titulo)
         
         # Verificar duplicado
         es_duplicado, ref_existente = self.verificar_duplicado(titulo, autores, año, publicacion)
@@ -278,8 +362,9 @@ class DatabaseService:
                     """
                     INSERT INTO referencias 
                     (titulo, autores, año, publicacion, doi, volumen, paginas, texto_raw, 
-                     fuente_documento, hash_unico, fuente_verificacion, citaciones, url_verificada)
-                    VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+                     fuente_documento, hash_unico, fuente_verificacion, citaciones, url_verificada,
+                     titulo_normalizado, titulo_original)
+                    VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
                     RETURNING id
                     """,
                     (
@@ -295,7 +380,9 @@ class DatabaseService:
                         hash_unico,
                         fuente_verificacion,
                         citaciones,
-                        url_verificada
+                        url_verificada,
+                        titulo_normalizado,
+                        titulo_original or None
                     )
                 )
                 

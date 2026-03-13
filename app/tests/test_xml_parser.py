@@ -55,8 +55,8 @@ for i, ref in enumerate(referencias, 1):
         print(f"  {campo}: {valor}")
     
     if 'raw' in ref:
-        print(f"\n✅ Campo 'raw' encontrado: {ref['raw']}")
+        print(f"\nCampo 'raw' encontrado: {ref['raw']}")
     else:
-        print(f"\n❌ Campo 'raw' NO encontrado")
+        print(f"\nCampo 'raw' NO encontrado")
 
 print("\n" + "=" * 80)

@@ -51,7 +51,7 @@ def probar_grobid(texto: str, nombre: str):
             
             # Buscar específicamente el campo raw
             if 'raw_reference' in xml_resultado:
-                print("\n✅ SÍ contiene 'raw_reference'")
+                print("\nSI contiene 'raw_reference'")
                 import re
                 raw_matches = re.findall(r'<note type="raw_reference">(.*?)</note>', xml_resultado, re.DOTALL)
                 if raw_matches:
@@ -59,20 +59,20 @@ def probar_grobid(texto: str, nombre: str):
                     for i, raw in enumerate(raw_matches, 1):
                         print(f"  [{i}] {raw.strip()}")
             else:
-                print("\n❌ NO contiene 'raw_reference'")
+                print("\nNO contiene 'raw_reference'")
             
         else:
-            print(f"\n❌ Error: {response.status_code}")
+            print(f"\nError: {response.status_code}")
             print(response.text[:500])
     
     except Exception as e:
-        print(f"\n❌ Error al conectar con GROBID: {e}")
+        print(f"\nError al conectar con GROBID: {e}")
     
     print("\n" + "=" * 80 + "\n\n")
 
 
 if __name__ == '__main__':
-    print("\n🔍 INVESTIGANDO QUÉ DEVUELVE GROBID REALMENTE\n")
+    print("\nINVESTIGANDO QUE DEVUELVE GROBID REALMENTE\n")
     
     probar_grobid(texto_prueba_harvard, "HARVARD (2024) sin punto")
     probar_grobid(texto_prueba_apa, "APA (2024). con punto")

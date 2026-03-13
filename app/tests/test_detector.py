@@ -71,6 +71,34 @@ referencias_harvard = [
     }
 ]
 
+# ACM: Referencias con [N] + Apellido, Inicial. + año suelto
+referencias_acm = [
+    {
+        'raw': '[1] Smith, J., Jones, A., and Garcia, M. 2020. A novel approach to machine learning. ACM Trans. Intell. Syst. Technol. 11, 3 (May 2020), 1-25. https://doi.org/10.1145/3386252',
+        'autores': 'Smith, J., Jones, A., Garcia, M.',
+        'titulo': 'A novel approach to machine learning',
+        'año': '2020'
+    },
+    {
+        'raw': '[2] Brown, R. and Lee, K. 2019. Deep learning fundamentals. In Proceedings of the ACM Conference on AI (ACMAI). ACM, New York, 45-58.',
+        'autores': 'Brown, R., Lee, K.',
+        'titulo': 'Deep learning fundamentals',
+        'año': '2019'
+    },
+    {
+        'raw': '[3] Wilson, T. 2021. Natural language processing survey. Commun. ACM 64, 5 (May 2021), 88-95.',
+        'autores': 'Wilson, T.',
+        'titulo': 'Natural language processing survey',
+        'año': '2021'
+    },
+    {
+        'raw': '[4] Chen, L., Wang, H., and Liu, Z. 2018. Graph neural networks. ACM Comput. Surv. 50, 2, Article 26 (April 2018), 40 pages.',
+        'autores': 'Chen, L., Wang, H., Liu, Z.',
+        'titulo': 'Graph neural networks',
+        'año': '2018'
+    },
+]
+
 # Sin campo 'raw' - debe construir desde campos estructurados
 referencias_sin_raw = [
     {
@@ -102,6 +130,7 @@ def probar_detector():
     
     casos_prueba = [
         ("IEEE (con [1], [2])", referencias_ieee),
+        ("ACM (con [1] Apellido, Inicial. año suelto)", referencias_acm),
         ("Vancouver (con 1., 2.)", referencias_vancouver),
         ("APA (con (año).)", referencias_apa),
         ("Harvard (con (año) MAYÚSCULAS)", referencias_harvard),

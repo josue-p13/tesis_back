@@ -1,4 +1,5 @@
 import unicodedata
+import re
 from typing import Any, Dict
 
 SIMILITUD_MINIMA = 0.4
@@ -9,6 +10,11 @@ def _normalizar(texto: str) -> str:
     if not texto:
         return ""
     texto = unicodedata.normalize("NFD", texto.lower())
+    
+    # Eliminar guiones en palabras compuestas (ej: "socio-cultural" → "sociocultural")
+    # Reemplazar guión entre letras por nada (une la palabra)
+    texto = re.sub(r'(\w)-(\w)', r'\1\2', texto)
+    
     for char in ("-", ":", ".", "®", "©"):
         texto = texto.replace(char, " " if char not in ("®", "©") else "")
     return "".join(c for c in texto if unicodedata.category(c) != "Mn")

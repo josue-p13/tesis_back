@@ -60,7 +60,7 @@ def test_estilos():
     print()
     
     # Test Harvard
-    print("1️⃣  TEST HARVARD - Referencias con (año) SIN PUNTO")
+    print("TEST HARVARD - Referencias con (año) SIN PUNTO")
     print("-" * 80)
     print("Ejemplo de referencia:")
     print(f"   {referencias_harvard[0]['raw']}")
@@ -73,15 +73,15 @@ def test_estilos():
     print(f"✓ Descripción: {descripcion_harvard}")
     
     if estilo_harvard == "Harvard":
-        print("✅ CORRECTO: Detectó Harvard")
+        print("CORRECTO: Detecto Harvard")
     else:
-        print(f"❌ ERROR: Esperaba 'Harvard' pero obtuvo '{estilo_harvard}'")
+        print(f"ERROR: Esperaba 'Harvard' pero obtuvo '{estilo_harvard}'")
     
     print()
     print()
     
     # Test APA
-    print("2️⃣  TEST APA - Referencias con (año). CON PUNTO")
+    print("TEST APA - Referencias con (año). CON PUNTO")
     print("-" * 80)
     print("Ejemplo de referencia:")
     print(f"   {referencias_apa[0]['raw']}")
@@ -94,9 +94,9 @@ def test_estilos():
     print(f"✓ Descripción: {descripcion_apa}")
     
     if estilo_apa == "APA":
-        print("✅ CORRECTO: Detectó APA")
+        print("CORRECTO: Detecto APA")
     else:
-        print(f"❌ ERROR: Esperaba 'APA' pero obtuvo '{estilo_apa}'")
+        print(f"ERROR: Esperaba 'APA' pero obtuvo '{estilo_apa}'")
     
     print()
     print("=" * 80)

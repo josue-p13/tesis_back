@@ -163,15 +163,17 @@ def generar_txt_validacion(resultado_validacion: Dict, nombre_archivo: str | Non
     contenido += "=" * 80 + "\n\n"
 
     ESTADOS = {
-        "VERIFICADA":                        "[OK] VERIFICADA (por DOI)",
-        "VERIFICADA (BD Cache)":             "[✓]  VERIFICADA (desde BD cache)",
-        "DOI_NO_ENCONTRADO":                 "[X]  DOI no encontrado",
-        "ENCONTRADA_POR_TITULO":             "[~]  Encontrada por titulo",
-        "ENCONTRADA_POR_TITULO (DOI fallido)": "[~]  Encontrada por titulo (DOI fallido)",
-        "REFERENCIA_WEB":                    "[W]  Referencia web",
-        "URL_NO_ACCESIBLE":                  "[!]  URL no accesible",
-        "NO_ENCONTRADA":                     "[X]  No encontrada",
-        "SIN_DATOS_PARA_BUSCAR":             "[?]  Sin datos para buscar",
+        "VERIFICADA":                                    "[OK] VERIFICADA (por DOI)",
+        "VERIFICADA (BD Cache)":                         "[✓]  VERIFICADA (desde BD cache)",
+        "DOI_NO_ENCONTRADO":                             "[X]  DOI no encontrado",
+        "ENCONTRADA_POR_TITULO":                         "[~]  Encontrada por titulo",
+        "ENCONTRADA_POR_TITULO (DOI fallido)":           "[~]  Encontrada por titulo (DOI fallido)",
+        "ENCONTRADA_GOOGLE_SCHOLAR":                     "[GS] Encontrada en Google Scholar",
+        "ENCONTRADA_GOOGLE_SCHOLAR (DOI fallido)":       "[GS] Encontrada en Google Scholar (DOI fallido)",
+        "REFERENCIA_WEB":                                "[W]  Referencia web",
+        "URL_NO_ACCESIBLE":                              "[!]  URL no accesible",
+        "NO_ENCONTRADA":                                 "[X]  No encontrada",
+        "SIN_DATOS_PARA_BUSCAR":                         "[?]  Sin datos para buscar",
     }
 
     for ref in referencias:
