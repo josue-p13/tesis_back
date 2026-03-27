@@ -199,9 +199,6 @@ def clasificar_estilo_local(referencias: List[Dict[str, str]]) -> Dict[str, Any]
 
     confianza = int((coincidencias / total_referencias) * 100) if total_referencias > 0 else 0
 
-    print(f"[DEBUG] Patrones detectados: {dict(patrones)}")
-    print(f"[DEBUG] Estilo: {estilo_detectado}, Confianza: {confianza}%")
-
     return {
         'estilo': estilo_detectado,
         'confianza': confianza

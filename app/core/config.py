@@ -37,6 +37,12 @@ class Configuracion:
     # Validación y similitud
     SIMILITUD_TITULO_THRESHOLD = float(os.getenv("SIMILITUD_TITULO_THRESHOLD", "0.85"))
 
+    # ── Google OAuth ──
+    GOOGLE_CLIENT_ID = os.getenv("GOOGLE_CLIENT_ID", "")
+    GOOGLE_CLIENT_SECRET = os.getenv("GOOGLE_CLIENT_SECRET", "")
+    OAUTH_REDIRECT_URI = os.getenv("OAUTH_REDIRECT_URI", "http://localhost:8000/auth/callback")
+    SECRET_KEY = os.getenv("SECRET_KEY", "tu_clave_secreta_super_segura")
+
 
 config = Configuracion()
 

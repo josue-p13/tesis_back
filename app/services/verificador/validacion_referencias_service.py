@@ -241,78 +241,112 @@ async def buscar_por_arxiv_id(arxiv_id: str) -> Dict[str, Any]:
 
 async def buscar_por_titulo(titulo: str, autores: str = "") -> Dict[str, Any]:
     """
-    Busca en APIs académicas y Google Books. NO incluye Serper.
-    Serper se maneja en _validar_referencia_individual después de Gemini.
+    Busca en APIs académicas y Google Books.
+    Intenta primero con el título original; si falla, reintenta con traducción al inglés.
     """
-    resultado = {"titulo_buscado": titulo, "encontrado": False}
+    resultado   = {"titulo_buscado": titulo, "encontrado": False}
+    t_traducido = None
 
-    t = await traducir_si_es_espanol(titulo)
-
-    candidatos = [
-        r for r in await asyncio.gather(
-            openalex.buscar_titulo(t, autores),
-            crossref.buscar_titulo(t, autores),
-            ss.buscar_titulo(t, autores),
-            pubmed.buscar_titulo(t, autores),
-            core.buscar_titulo(t, autores),
-        )
-        if r is not None
+    # Lista de servicios académicos a consultar
+    SERVICIOS_ACADEMICOS = [
+        openalex.buscar_titulo,
+        crossref.buscar_titulo,
+        ss.buscar_titulo,
+        pubmed.buscar_titulo,
+        core.buscar_titulo,
     ]
 
-    # Fallback a Google Books si ninguna API académica encontró algo
+    async def _realizar_busqueda(t: str) -> List[Dict[str, Any]]:
+        return [
+            r for r in await asyncio.gather(*[s(t, autores) for s in SERVICIOS_ACADEMICOS])
+            if r is not None
+        ]
+
+    # Intento 1: título original
+    candidatos = await _realizar_busqueda(titulo)
+
+    # Intento 2: traducción al inglés
     if not candidatos:
-        datos_gb = await gbooks.buscar_titulo(t, autores)
+        t_traducido = await traducir_si_es_espanol(titulo)
+        if t_traducido != titulo:
+            print(f"[APIs] Reintentando con traducción: {t_traducido[:50]}...")
+            candidatos = await _realizar_busqueda(t_traducido)
+
+    # Fallback: Google Books
+    if not candidatos:
+        t_final  = t_traducido if t_traducido and t_traducido != titulo else titulo
+        datos_gb = await gbooks.buscar_titulo(t_final, autores)
+        if not datos_gb and t_final != titulo:
+            datos_gb = await gbooks.buscar_titulo(titulo, autores)
+
         if datos_gb:
             resultado.update({
-                "encontrado": True,
-                "fuente": datos_gb["fuente"],
-                "titulo_verificado": datos_gb["titulo"],
-                "doi_encontrado": "",
-                "citaciones": 0,
-                "url": datos_gb["url"],
+                "encontrado":         True,
+                "fuente":             datos_gb["fuente"],
+                "titulo_verificado":  datos_gb["titulo"],
+                "doi_encontrado":     "",
+                "citaciones":         0,
+                "url":                datos_gb["url"],
                 "autores_verificados": datos_gb.get("autores", ""),
             })
             if datos_gb.get("isbn"):
                 resultado["isbn"] = datos_gb["isbn"]
         return resultado
 
-    # Elegir el mejor candidato por similitud de título + citaciones
+    # Elegir mejor candidato por similitud + citaciones
     mejor = max(
         candidatos,
         key=lambda c: _similitud_titulos(titulo, c["titulo"]) + min(c.get("citaciones", 0) / 1000, 0.3),
     )
     resultado.update({
-        "encontrado": True,
-        "fuente": mejor["fuente"],
-        "titulo_verificado": mejor["titulo"],
-        "doi_encontrado": mejor["doi"],
-        "citaciones": mejor.get("citaciones", 0),
-        "url": mejor["url"],
+        "encontrado":          True,
+        "fuente":              mejor["fuente"],
+        "titulo_verificado":   mejor["titulo"],
+        "doi_encontrado":      mejor["doi"],
+        "citaciones":          mejor.get("citaciones", 0),
+        "url":                 mejor["url"],
         "autores_verificados": mejor.get("autores", ""),
     })
     return resultado
 
 
-async def buscar_por_serper(titulo: str, autores: str = "", serper_api_key: str = "", usar_serper: bool = False) -> Dict[str, Any]:
+async def buscar_por_serper(
+    titulo: str,
+    autores: str = "",
+    serper_api_key: str = "",
+    usar_serper: bool = False,
+) -> Dict[str, Any]:
     """
     Último recurso: Google Scholar via Serper.
-    Solo se llama cuando BD + APIs ya fallaron.
-    La api key y el flag llegan como parámetros desde el front.
+    Intenta primero con título original; si falla, reintenta con traducción al inglés.
     """
     resultado = {"titulo_buscado": titulo, "encontrado": False}
     if not usar_serper or not serper_api_key:
         return resultado
-    t = await traducir_si_es_espanol(titulo)
-    datos_serper = await serper.buscar_titulo_google_scholar(t, autores, serper_api_key=serper_api_key)
-    if datos_serper and datos_serper.get("encontrado"):
+
+    # Intento 1: título original
+    datos = await serper.buscar_titulo_google_scholar(titulo, autores, serper_api_key=serper_api_key)
+
+    # Intento 2: traducción al inglés
+    if not datos or not datos.get("encontrado"):
+        t_traducido = await traducir_si_es_espanol(titulo)
+        if t_traducido != titulo:
+            print(f"[Serper] Reintentando con traducción: {t_traducido[:50]}...")
+            datos = await serper.buscar_titulo_google_scholar(
+                t_traducido, autores,
+                serper_api_key=serper_api_key,
+                titulo_alternativo=titulo,
+            )
+
+    if datos and datos.get("encontrado"):
         resultado.update({
-            "encontrado": True,
-            "fuente": datos_serper["fuente"],
-            "titulo_verificado": datos_serper["titulo"],
-            "doi_encontrado": "",
-            "citaciones": datos_serper.get("citaciones", 0),
-            "url": datos_serper["url"],
-            "autores_verificados": datos_serper.get("autores", ""),
+            "encontrado":          True,
+            "fuente":              datos["fuente"],
+            "titulo_verificado":   datos["titulo"],
+            "doi_encontrado":      "",
+            "citaciones":          datos.get("citaciones", 0),
+            "url":                 datos["url"],
+            "autores_verificados": datos.get("autores", ""),
         })
     return resultado
 
@@ -363,108 +397,108 @@ async def _validar_referencia_individual(
             resultado["doi_sugerido"] = datos_bd["doi_encontrado"]
         return resultado
 
-    # ═══════════════════════════════════════════════════════════
-    # PASO 2: APIs ACADÉMICAS (openalex, crossref, ss, pubmed, core, gbooks)
-    # ═══════════════════════════════════════════════════════════
-
-    datos_apis = None  # resultado de APIs si se encuentra
+    # ── PASO 2: APIs académicas ───────────────────────────────────────────
+    datos_apis = None
 
     if ref.get("doi"):
+        resultado["con_doi"] = True
         datos = await buscar_por_doi(ref["doi"])
         if datos["encontrado"]:
             datos_apis = datos
-            resultado["estado"]  = "VERIFICADA"
-            resultado["con_doi"] = True
+            resultado["estado"] = "VERIFICADA"
         elif ref.get("titulo"):
+            # Si el DOI falló, intentamos buscar por el título que viene en la ref
             datos_titulo = await buscar_por_titulo(ref["titulo"], ref.get("autores", ""))
             if datos_titulo["encontrado"]:
                 datos_apis = datos_titulo
-                resultado["estado"]  = "ENCONTRADA_POR_TITULO (DOI fallido)"
-                resultado["con_doi"] = True
+                resultado["estado"] = "ENCONTRADA_POR_TITULO (DOI fallido)"
             else:
-                resultado["estado"]  = "DOI_NO_ENCONTRADO"
-                resultado["con_doi"] = True
+                resultado["estado"] = "DOI_NO_ENCONTRADO"
         else:
-            resultado["estado"]  = "DOI_NO_ENCONTRADO"
-            resultado["con_doi"] = True
+            resultado["estado"] = "DOI_NO_ENCONTRADO"
 
     elif ref.get("url"):
+        resultado["con_doi"] = False
         url_ref  = ref["url"]
         arxiv_id = _extraer_arxiv_id(url_ref)
         if arxiv_id:
             datos_arxiv = await buscar_por_arxiv_id(arxiv_id)
             if datos_arxiv["encontrado"]:
-                resultado["estado"]     = "VERIFICADA"
-                resultado["validacion"] = datos_arxiv
-                resultado["con_doi"]    = False
+                await guardar_en_bd_si_verificada(ref, datos_arxiv)
+                resultado.update({
+                    "validacion":     datos_arxiv,
+                    "estado":         "VERIFICADA",
+                    "guardado_en_bd": True,
+                })
                 if datos_arxiv.get("doi_encontrado"):
                     resultado["doi_sugerido"] = datos_arxiv["doi_encontrado"]
-                await guardar_en_bd_si_verificada(ref, datos_arxiv)
                 return resultado
+
         url_accesible = await _verificar_url(url_ref)
-        resultado["estado"]     = "REFERENCIA_WEB" if url_accesible else "URL_NO_ACCESIBLE"
-        resultado["validacion"] = {"encontrado": url_accesible, "fuente": "URL web", "url": url_ref}
-        resultado["con_doi"]    = False
-        return resultado  # URLs web no pasan por Serper
+        datos_url     = {"encontrado": url_accesible, "fuente": "URL web", "url": url_ref}
+        resultado.update({
+            "validacion": datos_url,
+            "estado":     "REFERENCIA_WEB" if url_accesible else "URL_NO_ACCESIBLE",
+        })
+        if url_accesible:
+            await guardar_en_bd_si_verificada(ref, datos_url)
+            resultado["guardado_en_bd"] = True
+        return resultado
 
     elif ref.get("titulo"):
+        resultado["con_doi"] = False
         datos = await buscar_por_titulo(ref["titulo"], ref.get("autores", ""))
         if datos["encontrado"]:
             datos_apis = datos
-            resultado["estado"]  = "ENCONTRADA_POR_TITULO"
-            resultado["con_doi"] = False
+            resultado["estado"] = "ENCONTRADA_POR_TITULO"
         else:
-            resultado["estado"]  = "NO_ENCONTRADA"
-            resultado["con_doi"] = False
+            resultado["estado"] = "NO_ENCONTRADA"
 
     else:
-        resultado["estado"]     = "SIN_DATOS_PARA_BUSCAR"
-        resultado["validacion"] = {"encontrado": False}
-        resultado["con_doi"]    = False
+        resultado.update({"validacion": {"encontrado": False}, "estado": "SIN_DATOS_PARA_BUSCAR", "con_doi": False})
         return resultado
 
-    # Si APIs encontraron algo — guardar y retornar
     if datos_apis:
-        resultado["validacion"] = datos_apis
+        await guardar_en_bd_si_verificada(ref, datos_apis)
+        resultado.update({
+            "validacion":     datos_apis,
+            "guardado_en_bd": True,
+        })
         if datos_apis.get("doi_encontrado"):
             resultado["doi_sugerido"] = datos_apis["doi_encontrado"]
-        await guardar_en_bd_si_verificada(ref, datos_apis)
         return resultado
 
-    # ═══════════════════════════════════════════════════════════
-    # PASO 3: SCORING en BD
-    #   Las APIs no encontraron nada. Antes de ir a Serper,
-    #   buscamos en BD usando scoring combinado (titulo + año + autores + raw).
-    # ═══════════════════════════════════════════════════════════
+    # ── PASO 3: BD por score ──────────────────────────────────────────────
     datos_score = _buscar_en_bd_por_score(ref)
     if datos_score and datos_score.get("encontrado"):
-        resultado["validacion"] = datos_score
-        resultado["estado"]     = "VERIFICADA (BD por score)"
+        resultado.update({
+            "validacion": datos_score,
+            "estado":     "VERIFICADA (BD por score)",
+        })
         if datos_score.get("doi_encontrado"):
             resultado["doi_sugerido"] = datos_score["doi_encontrado"]
         return resultado
 
-    # ═══════════════════════════════════════════════════════════
-    # PASO 4: SERPER — último recurso (api key y flag vienen del front)
-    # ═══════════════════════════════════════════════════════════
-    titulo_buscar = ref.get("titulo", "")
-    if titulo_buscar and usar_serper and serper_api_key:
-        print(f"[Serper] Ultimo recurso para: {titulo_buscar[:60]}")
+    # ── PASO 4: Serper (último recurso) ───────────────────────────────────
+    if ref.get("titulo") and usar_serper and serper_api_key:
+        print(f"[Serper] Último recurso para: {ref['titulo'][:60]}")
         datos_serper = await buscar_por_serper(
-            titulo_buscar, ref.get("autores", ""),
+            ref["titulo"], ref.get("autores", ""),
             serper_api_key=serper_api_key,
             usar_serper=usar_serper,
         )
         if datos_serper and datos_serper.get("encontrado"):
-            resultado["validacion"] = datos_serper
-            resultado["estado"]     = "ENCONTRADA_GOOGLE_SCHOLAR"
+            await guardar_en_bd_si_verificada(ref, datos_serper)
+            resultado.update({
+                "validacion":     datos_serper,
+                "estado":         "ENCONTRADA_GOOGLE_SCHOLAR",
+                "guardado_en_bd": True,
+            })
             if datos_serper.get("doi_encontrado"):
                 resultado["doi_sugerido"] = datos_serper["doi_encontrado"]
-            await guardar_en_bd_si_verificada(ref, datos_serper)
             return resultado
 
-    # Ningún paso encontró la referencia
-    resultado["validacion"] = {"encontrado": False}
+    resultado["validacion" ] = {"encontrado": False}
     return resultado
 
 
