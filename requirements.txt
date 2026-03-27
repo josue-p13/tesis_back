@@ -7,3 +7,5 @@ python-dotenv
 sqlalchemy
 deep-translator
 langdetect
+itsdangerous
+authlib
