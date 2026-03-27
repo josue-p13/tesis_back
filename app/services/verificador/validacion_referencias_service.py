@@ -47,7 +47,6 @@ def buscar_en_bd_primero(ref: Dict[str, Any]) -> Optional[Dict[str, Any]]:
             if ref.get('doi'):
                 resultado = db.buscar_por_doi(ref['doi'])
                 if resultado:
-                    print(f"[BD] Hit por DOI: {ref['doi']}")
                     return _formatear(resultado)
 
             # 2. Búsqueda por similitud de título (incluye publicacion y titulo_original)
@@ -61,11 +60,9 @@ def buscar_en_bd_primero(ref: Dict[str, Any]) -> Optional[Dict[str, Any]]:
 
             return None
 
-    except ConnectionError as e:
-        print(f"[BD] No disponible — se ira a APIs externas. ({e})")
+    except ConnectionError:
         return None
-    except Exception as e:
-        print(f"[BD] Error inesperado al buscar: {e}")
+    except Exception:
         return None
 
 
@@ -293,7 +290,6 @@ async def buscar_por_titulo(titulo: str, autores: str = "") -> Dict[str, Any]:
                 resultado["isbn"] = datos_gb["isbn"]
         return resultado
 
-    # Elegir mejor candidato por similitud + citaciones
     mejor = max(
         candidatos,
         key=lambda c: _similitud_titulos(titulo, c["titulo"]) + min(c.get("citaciones", 0) / 1000, 0.3),

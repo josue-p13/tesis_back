@@ -49,8 +49,9 @@ class DatabaseService:
                     ADD COLUMN IF NOT EXISTS titulo_original TEXT;
                 """)
                 self.connection.commit()
-        except Exception as e:
-            print(f"Nota: Columnas ya existen o error: {e}")
+        except Exception:
+            # Silenciamos errores de inicialización si las columnas ya existen
+            pass
             self.connection.rollback()
     
     def desconectar(self):

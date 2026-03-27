@@ -126,6 +126,7 @@ async def buscar_titulo_google_scholar(
 
                 if similitud >= SIMILITUD_THRESHOLD:
                     link = res.get("link", "")
+                    snippet = res.get("snippet", "")
                     publication_info = res.get("publicationInfo", "")
                     
                     autores_str = ""
