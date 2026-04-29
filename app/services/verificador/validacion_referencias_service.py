@@ -236,10 +236,10 @@ async def buscar_por_arxiv_id(arxiv_id: str) -> Dict[str, Any]:
 
 # ──────────────────────────── búsqueda por título ────────────────────────────
 
-async def buscar_por_titulo(titulo: str, autores: str = "") -> Dict[str, Any]:
+async def buscar_por_titulo(titulo: str, autores: str = "", permitir_traduccion: bool = False) -> Dict[str, Any]:
     """
     Busca en APIs académicas y Google Books.
-    Intenta primero con el título original; si falla, reintenta con traducción al inglés.
+    Intenta con el título original; si falla y está permitido, reintenta con traducción al inglés.
     """
     resultado   = {"titulo_buscado": titulo, "encontrado": False}
     t_traducido = None
@@ -262,8 +262,8 @@ async def buscar_por_titulo(titulo: str, autores: str = "") -> Dict[str, Any]:
     # Intento 1: título original
     candidatos = await _realizar_busqueda(titulo)
 
-    # Intento 2: traducción al inglés
-    if not candidatos:
+    # Intento 2: traducción al inglés (solo si se permite desde el front)
+    if not candidatos and permitir_traduccion:
         t_traducido = await traducir_si_es_espanol(titulo)
         if t_traducido != titulo:
             print(f"[APIs] Reintentando con traducción: {t_traducido[:50]}...")
@@ -311,10 +311,11 @@ async def buscar_por_serper(
     autores: str = "",
     serper_api_key: str = "",
     usar_serper: bool = False,
+    permitir_traduccion: bool = False,
 ) -> Dict[str, Any]:
     """
     Último recurso: Google Scholar via Serper.
-    Intenta primero con título original; si falla, reintenta con traducción al inglés.
+    Intenta con título original; si falla y está permitido, reintenta con traducción al inglés.
     """
     resultado = {"titulo_buscado": titulo, "encontrado": False}
     if not usar_serper or not serper_api_key:
@@ -323,8 +324,8 @@ async def buscar_por_serper(
     # Intento 1: título original
     datos = await serper.buscar_titulo_google_scholar(titulo, autores, serper_api_key=serper_api_key)
 
-    # Intento 2: traducción al inglés
-    if not datos or not datos.get("encontrado"):
+    # Intento 2: traducción al inglés (solo si se permite desde el front)
+    if (not datos or not datos.get("encontrado")) and permitir_traduccion:
         t_traducido = await traducir_si_es_espanol(titulo)
         if t_traducido != titulo:
             print(f"[Serper] Reintentando con traducción: {t_traducido[:50]}...")
@@ -372,6 +373,7 @@ async def _validar_referencia_individual(
     indice: int,
     serper_api_key: str = "",
     usar_serper: bool = False,
+    permitir_traduccion: bool = False,
 ) -> Dict[str, Any]:
     resultado = {
         "indice": indice + 1,
@@ -404,7 +406,7 @@ async def _validar_referencia_individual(
             resultado["estado"] = "VERIFICADA"
         elif ref.get("titulo"):
             # Si el DOI falló, intentamos buscar por el título que viene en la ref
-            datos_titulo = await buscar_por_titulo(ref["titulo"], ref.get("autores", ""))
+            datos_titulo = await buscar_por_titulo(ref["titulo"], ref.get("autores", ""), permitir_traduccion=permitir_traduccion)
             if datos_titulo["encontrado"]:
                 datos_apis = datos_titulo
                 resultado["estado"] = "ENCONTRADA_POR_TITULO (DOI fallido)"
@@ -443,7 +445,7 @@ async def _validar_referencia_individual(
 
     elif ref.get("titulo"):
         resultado["con_doi"] = False
-        datos = await buscar_por_titulo(ref["titulo"], ref.get("autores", ""))
+        datos = await buscar_por_titulo(ref["titulo"], ref.get("autores", ""), permitir_traduccion=permitir_traduccion)
         if datos["encontrado"]:
             datos_apis = datos
             resultado["estado"] = "ENCONTRADA_POR_TITULO"
@@ -482,6 +484,7 @@ async def _validar_referencia_individual(
             ref["titulo"], ref.get("autores", ""),
             serper_api_key=serper_api_key,
             usar_serper=usar_serper,
+            permitir_traduccion=permitir_traduccion,
         )
         if datos_serper and datos_serper.get("encontrado"):
             await guardar_en_bd_si_verificada(ref, datos_serper)
@@ -502,9 +505,15 @@ async def validar_referencias(
     referencias: List[Dict],
     serper_api_key: str = "",
     usar_serper: bool = False,
+    permitir_traduccion: bool = False,
 ) -> Dict[str, Any]:
     resultados = await asyncio.gather(*[
-        _validar_referencia_individual(ref, i, serper_api_key=serper_api_key, usar_serper=usar_serper)
+        _validar_referencia_individual(
+            ref, i, 
+            serper_api_key=serper_api_key, 
+            usar_serper=usar_serper,
+            permitir_traduccion=permitir_traduccion
+        )
         for i, ref in enumerate(referencias)
     ])
 
@@ -545,6 +554,9 @@ async def validar_referencias(
         "estadisticas_google_scholar": {
             "encontradas_por_serper": desde_google_scholar,
             "serper_habilitado": usar_serper,
+        },
+        "opciones_busqueda": {
+            "permitir_traduccion": permitir_traduccion,
         },
         "referencias": list(resultados),
     }

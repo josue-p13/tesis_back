@@ -41,11 +41,11 @@ class Configuracion:
     GOOGLE_CLIENT_ID = os.getenv("GOOGLE_CLIENT_ID", "")
     GOOGLE_CLIENT_SECRET = os.getenv("GOOGLE_CLIENT_SECRET", "")
     OAUTH_REDIRECT_URI = os.getenv("OAUTH_REDIRECT_URI", "http://localhost:8000/auth/callback")
-    SECRET_KEY = os.getenv("SECRET_KEY", "tu_clave_secreta_super_segura")
+    SECRET_KEY = os.getenv("SECRET_KEY")
 
     # ── Microsoft OAuth ──
     MS_CLIENT_ID = os.getenv("MS_CLIENT_ID", "")
     MS_CLIENT_SECRET = os.getenv("MS_CLIENT_SECRET", "")
-    MS_TENANT_ID = os.getenv("MS_TENANT_ID", "common") # "common" para cuentas personales y organizacionales
+    MS_TENANT_ID = os.getenv("MS_TENANT_ID", "common")
 
 config = Configuracion()

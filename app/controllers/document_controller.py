@@ -20,6 +20,7 @@ async def extraer_referencias(
     pdf: UploadFile = File(..., description="Archivo PDF a procesar"),
     serper_api_key: str = Form("", description="API Key de Serper.dev (opcional)"),
     usar_serper: bool = Form(False, description="Activar búsqueda en Google Scholar via Serper"),
+    permitir_traduccion: bool = Form(False, description="Permitir traducir títulos al inglés para mejorar búsqueda"),
 ) -> Dict[str, Any]:
     """
     Extrae las referencias bibliográficas de un PDF usando GROBID.
@@ -48,9 +49,10 @@ async def extraer_referencias(
                 "descripcion": descripcion_estilo,
             },
             "referencias": referencias_extraidas,
-            # Devolvemos los parámetros de Serper para que el front los reenvíe a /validar
+            # Devolvemos los parámetros para que el front los reenvíe a /validar
             "serper_api_key": serper_api_key,
             "usar_serper": usar_serper,
+            "permitir_traduccion": permitir_traduccion,
         }
 
     except Exception as e:
@@ -77,7 +79,8 @@ async def validar_referencias_endpoint(
     {
         "referencias": [...],       // lista de referencias obtenidas de /extraer
         "serper_api_key": "...",    // API Key de Serper.dev (string, puede ser "")
-        "usar_serper": true/false   // si se debe usar Google Scholar como último recurso
+        "usar_serper": true/false,  // si se debe usar Google Scholar como último recurso
+        "permitir_traduccion": true/false // si se permite traducir títulos para búsqueda profunda
     }
 
     Devuelve el resultado de la validación: estado por referencia, fuente, DOI encontrado, etc.
@@ -85,6 +88,7 @@ async def validar_referencias_endpoint(
     referencias: List[Dict] = body.get("referencias", [])
     serper_api_key: str = body.get("serper_api_key", "")
     usar_serper: bool = bool(body.get("usar_serper", False))
+    permitir_traduccion: bool = bool(body.get("permitir_traduccion", False))
 
     if not referencias:
         raise HTTPException(
@@ -97,6 +101,7 @@ async def validar_referencias_endpoint(
             referencias,
             serper_api_key=serper_api_key,
             usar_serper=usar_serper,
+            permitir_traduccion=permitir_traduccion,
         )
         return resultado
 
