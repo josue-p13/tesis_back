@@ -43,11 +43,20 @@ def buscar_en_bd_primero(ref: Dict[str, Any]) -> Optional[Dict[str, Any]]:
 
     try:
         with DatabaseService() as db:
-            # 1. Búsqueda por DOI exacto (más confiable)
+            # 1. Búsqueda por DOI exacto (más confiable si el título coincide)
             if ref.get('doi'):
                 resultado = db.buscar_por_doi(ref['doi'])
                 if resultado:
-                    return _formatear(resultado)
+                    titulo_ref = ref.get("titulo", "")
+                    titulo_bd = resultado.get("titulo", "")
+                    if titulo_ref and titulo_bd:
+                        similitud = _similitud_titulos(titulo_ref, titulo_bd)
+                        if similitud >= 0.4:
+                            return _formatear(resultado)
+                        else:
+                            print(f"[BD] DOI {ref['doi']} descartado por baja similitud ({similitud:.2f}): '{titulo_ref}' vs '{titulo_bd}'")
+                    else:
+                        return _formatear(resultado)
 
             # 2. Búsqueda por similitud de título (incluye publicacion y titulo_original)
             if ref.get('titulo'):
@@ -401,7 +410,23 @@ async def _validar_referencia_individual(
     if ref.get("doi"):
         resultado["con_doi"] = True
         datos = await buscar_por_doi(ref["doi"])
+        
+        doi_valido = False
         if datos["encontrado"]:
+            titulo_ref = ref.get("titulo", "")
+            titulo_verificado = datos.get("titulo_verificado", "")
+            
+            # Si tenemos ambos títulos, verificamos que coincidan mínimamente
+            if titulo_ref and titulo_verificado:
+                similitud = _similitud_titulos(titulo_ref, titulo_verificado)
+                if similitud >= 0.4:  # SIMILITUD_MINIMA
+                    doi_valido = True
+                else:
+                    print(f"[Validación] DOI {ref['doi']} descartado por baja similitud ({similitud:.2f}): '{titulo_ref}' vs '{titulo_verificado}'")
+            else:
+                doi_valido = True
+
+        if doi_valido:
             datos_apis = datos
             resultado["estado"] = "VERIFICADA"
         elif ref.get("titulo"):

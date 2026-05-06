@@ -1,7 +1,7 @@
 from typing import Any, Dict, Optional
 
-from app.services.verificador.http_client import _get, SEMANTICSCHOLAR_BASE
 from app.services.obtener.text_utils_service import _validar_resultado
+from app.services.verificador.http_client import SEMANTICSCHOLAR_BASE, _get
 
 _FIELDS_FULL = "title,authors,year,externalIds,citationCount"
 
@@ -35,7 +35,7 @@ async def buscar_arxiv(arxiv_id: str) -> Optional[Dict[str, Any]]:
         )
         if resp.status_code == 200:
             data = resp.json()
-            doi  = (data.get("externalIds") or {}).get("DOI", "")
+            doi = (data.get("externalIds") or {}).get("DOI", "")
             return {
                 "encontrado": True,
                 "fuente": "Semantic Scholar (arXiv)",
@@ -61,19 +61,20 @@ async def buscar_titulo(titulo: str, autores: str = "") -> Optional[Dict[str, An
         )
         if resp.status_code == 200:
             for paper in resp.json().get("data", []):
-                t_verif  = paper.get("title", "")
-                nombres  = [a.get("name", "") for a in paper.get("authors", [])]
+                t_verif = paper.get("title", "")
+                nombres = [a.get("name", "") for a in paper.get("authors", [])]
                 if not _validar_resultado(titulo, t_verif, autores, nombres):
                     continue
-                doi      = (paper.get("externalIds") or {}).get("DOI", "")
+                doi = (paper.get("externalIds") or {}).get("DOI", "")
                 paper_id = paper.get("paperId", "")
                 return {
                     "fuente": "Semantic Scholar",
                     "titulo": t_verif,
                     "doi": doi,
                     "citaciones": paper.get("citationCount", 0),
-                    "url": f"https://doi.org/{doi}" if doi
-                           else f"https://www.semanticscholar.org/paper/{paper_id}",
+                    "url": f"https://doi.org/{doi}"
+                    if doi
+                    else f"https://www.semanticscholar.org/paper/{paper_id}",
                 }
     except Exception:
         pass
