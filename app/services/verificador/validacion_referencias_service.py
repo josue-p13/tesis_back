@@ -15,6 +15,7 @@ from app.services.verificador import (
 from app.services.verificador.api_serper_service import SerperAuthError
 from app.services.verificador.http_client import HTTP_CLIENT
 from app.services.db.database_service import DatabaseService
+from app.core.config import config
 
 
 # ──────────────────────────── búsqueda en BD local (caché) ────────────────────────────
@@ -51,7 +52,7 @@ def buscar_en_bd_primero(ref: Dict[str, Any]) -> Optional[Dict[str, Any]]:
                     titulo_bd = resultado.get("titulo", "")
                     if titulo_ref and titulo_bd:
                         similitud = _similitud_titulos(titulo_ref, titulo_bd)
-                        if similitud >= 0.4:
+                        if similitud >= config.SIMILITUD_TITULO_THRESHOLD:
                             return _formatear(resultado)
                         else:
                             print(f"[BD] DOI {ref['doi']} descartado por baja similitud ({similitud:.2f}): '{titulo_ref}' vs '{titulo_bd}'")
@@ -118,7 +119,7 @@ def _buscar_en_bd_por_score(ref: Dict[str, Any]) -> Optional[Dict[str, Any]]:
             return 0.0
         return len(tokens_ref & tokens_bd) / len(tokens_ref)
 
-    THRESHOLD = 0.65
+    THRESHOLD = config.SIMILITUD_TITULO_THRESHOLD
 
     try:
         with DatabaseService() as db:
@@ -419,7 +420,7 @@ async def _validar_referencia_individual(
             # Si tenemos ambos títulos, verificamos que coincidan mínimamente
             if titulo_ref and titulo_verificado:
                 similitud = _similitud_titulos(titulo_ref, titulo_verificado)
-                if similitud >= 0.4:  # SIMILITUD_MINIMA
+                if similitud >= config.SIMILITUD_TITULO_THRESHOLD:  # SIMILITUD_MINIMA
                     doi_valido = True
                 else:
                     print(f"[Validación] DOI {ref['doi']} descartado por baja similitud ({similitud:.2f}): '{titulo_ref}' vs '{titulo_verificado}'")
