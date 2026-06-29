@@ -11,6 +11,9 @@ RUN apt-get update && apt-get install -y \
     curl \
     && rm -rf /var/lib/apt/lists/*
 
+# Asegurar que existe la carpeta tmp de Grobid y tiene los permisos correctos para el usuario 1000
+RUN mkdir -p /opt/grobid/grobid-home/tmp && chown -R 1000:1000 /opt/grobid/grobid-home/tmp
+
 # Crear el directorio de trabajo y asegurar permisos para el usuario 1000 (grobid)
 WORKDIR /app
 RUN chown -R 1000:1000 /app
