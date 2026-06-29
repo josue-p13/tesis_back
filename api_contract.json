@@ -30,6 +30,12 @@
             "obligatorio": false,
             "default": false,
             "descripcion": "Si es true, la validacion usara Google Scholar via Serper como ultimo recurso. Requiere que serper_api_key no este vacia."
+          },
+          "permitir_traduccion": {
+            "tipo": "boolean",
+            "obligatorio": false,
+            "default": false,
+            "descripcion": "Si es true, se permitira la traduccion automatica de titulos al ingles si la busqueda original falla."
           }
         }
       },
@@ -49,7 +55,7 @@
             "campos": {
               "nombre": {
                 "tipo": "string",
-                "valores_posibles": ["IEEE", "APA", "Harvard", "ACM", "Vancouver", "MLA", "Desconocido"],
+                "valores_posibles": ["IEEE", "APA", "Vancouver", "Desconocido"],
                 "ejemplo": "IEEE"
               },
               "descripcion": {
@@ -117,6 +123,11 @@
           "usar_serper": {
             "tipo": "boolean",
             "descripcion": "Eco del flag usar_serper recibido, para que el front lo reenvie a /validar",
+            "ejemplo": true
+          },
+          "permitir_traduccion": {
+            "tipo": "boolean",
+            "descripcion": "Eco del flag permitir_traduccion recibido, para que el front lo reenvie a /validar",
             "ejemplo": true
           }
         }
@@ -187,6 +198,12 @@
             "obligatorio": false,
             "default": false,
             "descripcion": "Si es true, activa Google Scholar via Serper como ultimo recurso de busqueda para referencias no encontradas en otras APIs."
+          },
+          "permitir_traduccion": {
+            "tipo": "boolean",
+            "obligatorio": false,
+            "default": false,
+            "descripcion": "Si es true, se permite traducir titulos al ingles para mejorar la busqueda en Google Scholar."
           }
         }
       },

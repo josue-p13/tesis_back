@@ -18,11 +18,7 @@ class DatabaseService:
         """Establece conexión con la base de datos"""
         try:
             self.connection = psycopg2.connect(
-                host=config.DB_HOST,
-                port=config.DB_PORT,
-                user=config.DB_USER,
-                password=config.DB_PASSWORD,
-                dbname=config.DB_NAME,
+                config.DATABASE_URL,
                 cursor_factory=RealDictCursor
             )
             # Crear columnas nuevas si no existen (migración automática)

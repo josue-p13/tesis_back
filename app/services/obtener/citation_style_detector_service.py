@@ -28,31 +28,7 @@ from collections import defaultdict
 #   7. "In Proceedings of" o "Proc. of" — conferencias ACM
 # ──────────────────────────────────────────────────────────────────────────────
 
-_ACM_PATTERNS = [
-    # 1. DOI con prefijo ACM (10.1145) — muy exclusivo
-    (r'doi\.org/10\.1145/', 4),
 
-    # 2. Corchete + Apellido, Inicial. — nombre invertido (diferencia con IEEE)
-    #    Ej: "[1] Smith, J., Jones, A. ..."
-    (r'^\[\d+\]\s+[A-Z][a-z]+,\s+[A-Z]\.', 3),
-
-    # 3. Año suelto después de autores (sin paréntesis)
-    #    Ej: "Smith, J. 2020. Title of paper."
-    (r'[A-Z]\.\s+\d{4}\.\s+[A-Z]', 3),
-
-    # 4. Formato de volumen/issue ACM: "64, 5 (May 2021), 88-95"
-    #    vol, issue (Mes Año), páginas — sin "vol." explícito antes
-    (r'\d+,\s+\d+\s+\(\w+\s+\d{4}\),\s*\d+', 3),
-
-    # 5. "Article X, Y pages." — exclusivo de artículos ACM
-    (r'Article\s+\d+.*?\d+\s+pages?\.', 3),
-
-    # 6. Revistas y conferencias ACM conocidas
-    (r'\b(?:Commun\.?\s*ACM|ACM\s+Trans\.|ACM\s+Comput\.\s+Surv\.|ACM\s+SIGPLAN|ACM\s+SIGCOMM|ACM\s+SIGCHI|CACM|ACM\s+CCS|CHI\s+\d{4}|PLDI|SOSP|OSDI|SIGMOD|VLDB|ICSE|FSE|ISCA|MICRO|ASPLOS)\b', 3),
-
-    # 7. "In Proceedings of the ACM..." o "Proc. of the ACM..."
-    (r'\bIn Proceedings of\b|\bProc\.\s+of\b', 2),
-]
 
 
 def detectar_estilo_citacion(referencias: List[Dict[str, str]]) -> str:
@@ -145,17 +121,7 @@ def clasificar_estilo_local(referencias: List[Dict[str, str]]) -> Dict[str, Any]
             patrones['Vancouver'] += vancouver_score
             continue
 
-        # ── ACM ──────────────────────────────────────────────────────────────
-        # ACM también usa corchetes [N] pero con nombre invertido y año suelto.
-        # Se evalúa antes de IEEE para capturar las señales específicas de ACM.
-        acm_score = 0
-        for patron, peso in _ACM_PATTERNS:
-            if re.search(patron, linea):
-                acm_score += peso
 
-        if acm_score >= 3:
-            patrones['ACM'] += acm_score
-            continue
 
         # ── IEEE ─────────────────────────────────────────────────────────────
         if re.match(r'^\[\d+\]', linea):
@@ -171,11 +137,7 @@ def clasificar_estilo_local(referencias: List[Dict[str, str]]) -> Dict[str, Any]
             patrones['IEEE'] += 2
             continue
 
-        # ── Harvard ──────────────────────────────────────────────────────────
-        # (año) sin punto — "Smith, J. (2024) Title"
-        if re.search(r'\(\d{4}\)\s+[A-Za-z]', linea) and not re.search(r'\(\d{4}\)\.', linea):
-            patrones['Harvard'] += 1
-            continue
+
 
         # ── APA ──────────────────────────────────────────────────────────────
         # (año). con punto — "Smith, J. (2024). Title"
@@ -183,11 +145,7 @@ def clasificar_estilo_local(referencias: List[Dict[str, str]]) -> Dict[str, Any]
             patrones['APA'] += 1
             continue
 
-        # ── MLA ──────────────────────────────────────────────────────────────
-        # Apellido, Nombre. (nombre invertido con punto al final del nombre)
-        if re.search(r'^[A-Z][a-z]+,\s+[A-Z][a-z]+\.', linea):
-            patrones['MLA'] += 1
-            continue
+
 
 
     if not patrones:
@@ -253,11 +211,8 @@ def obtener_descripcion_estilo(estilo: str) -> str:
     """
     descripciones = {
         'IEEE': 'Institute of Electrical and Electronics Engineers - Común en ingeniería y ciencias de la computación',
-        'ACM': 'Association for Computing Machinery - Común en ciencias de la computación e informática',
         'APA': 'American Psychological Association - Común en ciencias sociales y psicología',
         'Vancouver': 'Estilo Vancouver - Común en ciencias médicas y biomédicas',
-        'Harvard': 'Harvard Style - Común en Reino Unido y ciencias sociales',
-        'MLA': 'Modern Language Association - Común en literatura y humanidades',
         'Desconocido': 'No se pudo determinar el estilo de citación'
     }
 

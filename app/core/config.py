@@ -17,7 +17,9 @@ class Configuracion:
     DB_NAME = os.getenv("DB_NAME", "referencias_db")
     
     # URL de conexión a PostgreSQL
-    DATABASE_URL = f"postgresql://{DB_USER}:{DB_PASSWORD}@{DB_HOST}:{DB_PORT}/{DB_NAME}"
+    DATABASE_URL = os.getenv("DATABASE_URL")
+    if not DATABASE_URL:
+        DATABASE_URL = f"postgresql://{DB_USER}:{DB_PASSWORD}@{DB_HOST}:{DB_PORT}/{DB_NAME}"
     
     # GROBID
     GROBID_URL = os.getenv("GROBID_URL", "http://localhost:8070")

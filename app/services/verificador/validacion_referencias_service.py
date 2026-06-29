@@ -1,5 +1,6 @@
 import asyncio
 from typing import Any, Dict, List, Optional, Tuple
+from app.core.config import config
 
 from app.services.obtener.text_utils_service import _similitud_titulos, _extraer_arxiv_id, _resultado_base, _normalizar
 from app.services.language_service import traducir_si_es_espanol
@@ -43,20 +44,11 @@ def buscar_en_bd_primero(ref: Dict[str, Any]) -> Optional[Dict[str, Any]]:
 
     try:
         with DatabaseService() as db:
-            # 1. Búsqueda por DOI exacto (más confiable si el título coincide)
+            # 1. Búsqueda por DOI exacto (más confiable)
             if ref.get('doi'):
-                resultado = db.buscar_por_doi(ref['doi'])
+                resultado = db.buscar_por_doi(ref['doi']) 
                 if resultado:
-                    titulo_ref = ref.get("titulo", "")
-                    titulo_bd = resultado.get("titulo", "")
-                    if titulo_ref and titulo_bd:
-                        similitud = _similitud_titulos(titulo_ref, titulo_bd)
-                        if similitud >= 0.4:
-                            return _formatear(resultado)
-                        else:
-                            print(f"[BD] DOI {ref['doi']} descartado por baja similitud ({similitud:.2f}): '{titulo_ref}' vs '{titulo_bd}'")
-                    else:
-                        return _formatear(resultado)
+                    return _formatear(resultado)
 
             # 2. Búsqueda por similitud de título (incluye publicacion y titulo_original)
             if ref.get('titulo'):
@@ -118,7 +110,7 @@ def _buscar_en_bd_por_score(ref: Dict[str, Any]) -> Optional[Dict[str, Any]]:
             return 0.0
         return len(tokens_ref & tokens_bd) / len(tokens_ref)
 
-    THRESHOLD = 0.65
+    THRESHOLD = config.SIMILITUD_TITULO_THRESHOLD
 
     try:
         with DatabaseService() as db:
@@ -245,10 +237,10 @@ async def buscar_por_arxiv_id(arxiv_id: str) -> Dict[str, Any]:
 
 # ──────────────────────────── búsqueda por título ────────────────────────────
 
-async def buscar_por_titulo(titulo: str, autores: str = "", permitir_traduccion: bool = False) -> Dict[str, Any]:
+async def buscar_por_titulo(titulo: str, autores: str = "") -> Dict[str, Any]:
     """
     Busca en APIs académicas y Google Books.
-    Intenta con el título original; si falla y está permitido, reintenta con traducción al inglés.
+    Intenta primero con el título original; si falla, reintenta con traducción al inglés.
     """
     resultado   = {"titulo_buscado": titulo, "encontrado": False}
     t_traducido = None
@@ -271,8 +263,8 @@ async def buscar_por_titulo(titulo: str, autores: str = "", permitir_traduccion:
     # Intento 1: título original
     candidatos = await _realizar_busqueda(titulo)
 
-    # Intento 2: traducción al inglés (solo si se permite desde el front)
-    if not candidatos and permitir_traduccion:
+    # Intento 2: traducción al inglés
+    if not candidatos:
         t_traducido = await traducir_si_es_espanol(titulo)
         if t_traducido != titulo:
             print(f"[APIs] Reintentando con traducción: {t_traducido[:50]}...")
@@ -324,7 +316,7 @@ async def buscar_por_serper(
 ) -> Dict[str, Any]:
     """
     Último recurso: Google Scholar via Serper.
-    Intenta con título original; si falla y está permitido, reintenta con traducción al inglés.
+    Intenta primero con título original; si falla, reintenta con traducción al inglés (si se permite).
     """
     resultado = {"titulo_buscado": titulo, "encontrado": False}
     if not usar_serper or not serper_api_key:
@@ -333,7 +325,7 @@ async def buscar_por_serper(
     # Intento 1: título original
     datos = await serper.buscar_titulo_google_scholar(titulo, autores, serper_api_key=serper_api_key)
 
-    # Intento 2: traducción al inglés (solo si se permite desde el front)
+    # Intento 2: traducción al inglés (opcional)
     if (not datos or not datos.get("encontrado")) and permitir_traduccion:
         t_traducido = await traducir_si_es_espanol(titulo)
         if t_traducido != titulo:
@@ -410,28 +402,12 @@ async def _validar_referencia_individual(
     if ref.get("doi"):
         resultado["con_doi"] = True
         datos = await buscar_por_doi(ref["doi"])
-        
-        doi_valido = False
         if datos["encontrado"]:
-            titulo_ref = ref.get("titulo", "")
-            titulo_verificado = datos.get("titulo_verificado", "")
-            
-            # Si tenemos ambos títulos, verificamos que coincidan mínimamente
-            if titulo_ref and titulo_verificado:
-                similitud = _similitud_titulos(titulo_ref, titulo_verificado)
-                if similitud >= 0.4:  # SIMILITUD_MINIMA
-                    doi_valido = True
-                else:
-                    print(f"[Validación] DOI {ref['doi']} descartado por baja similitud ({similitud:.2f}): '{titulo_ref}' vs '{titulo_verificado}'")
-            else:
-                doi_valido = True
-
-        if doi_valido:
             datos_apis = datos
             resultado["estado"] = "VERIFICADA"
         elif ref.get("titulo"):
             # Si el DOI falló, intentamos buscar por el título que viene en la ref
-            datos_titulo = await buscar_por_titulo(ref["titulo"], ref.get("autores", ""), permitir_traduccion=permitir_traduccion)
+            datos_titulo = await buscar_por_titulo(ref["titulo"], ref.get("autores", ""))
             if datos_titulo["encontrado"]:
                 datos_apis = datos_titulo
                 resultado["estado"] = "ENCONTRADA_POR_TITULO (DOI fallido)"
@@ -470,7 +446,7 @@ async def _validar_referencia_individual(
 
     elif ref.get("titulo"):
         resultado["con_doi"] = False
-        datos = await buscar_por_titulo(ref["titulo"], ref.get("autores", ""), permitir_traduccion=permitir_traduccion)
+        datos = await buscar_por_titulo(ref["titulo"], ref.get("autores", ""))
         if datos["encontrado"]:
             datos_apis = datos
             resultado["estado"] = "ENCONTRADA_POR_TITULO"
@@ -534,8 +510,8 @@ async def validar_referencias(
 ) -> Dict[str, Any]:
     resultados = await asyncio.gather(*[
         _validar_referencia_individual(
-            ref, i, 
-            serper_api_key=serper_api_key, 
+            ref, i,
+            serper_api_key=serper_api_key,
             usar_serper=usar_serper,
             permitir_traduccion=permitir_traduccion
         )
@@ -579,9 +555,6 @@ async def validar_referencias(
         "estadisticas_google_scholar": {
             "encontradas_por_serper": desde_google_scholar,
             "serper_habilitado": usar_serper,
-        },
-        "opciones_busqueda": {
-            "permitir_traduccion": permitir_traduccion,
         },
         "referencias": list(resultados),
     }
