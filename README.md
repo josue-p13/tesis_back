@@ -1,3 +1,12 @@
+---
+title: Tesis Back
+emoji: 📑
+colorFrom: blue
+colorTo: green
+sdk: docker
+app_port: 7860
+---
+
 # Sistema de Extracción de Referencias Bibliográficas
 
 Backend para extracción y análisis de referencias bibliográficas desde documentos PDF académicos.
