@@ -36,14 +36,12 @@ async def register_google(request: Request):
 @router.get("/login/microsoft")
 async def login_microsoft(request: Request):
     """Redirige al usuario a la página de login de Microsoft."""
-    redirect_uri = "http://localhost:8000/auth/microsoft/callback"
-    return await oauth.microsoft.authorize_redirect(request, redirect_uri, state="login")
+    return await oauth.microsoft.authorize_redirect(request, config.MS_OAUTH_REDIRECT_URI, state="login")
 
 @router.get("/register/microsoft")
 async def register_microsoft(request: Request):
     """Redirige al usuario a la página de registro de Microsoft."""
-    redirect_uri = "http://localhost:8000/auth/microsoft/callback"
-    return await oauth.microsoft.authorize_redirect(request, redirect_uri, state="register")
+    return await oauth.microsoft.authorize_redirect(request, config.MS_OAUTH_REDIRECT_URI, state="register")
 
 @router.get("/callback")
 async def auth_callback(request: Request):
@@ -72,7 +70,7 @@ async def _procesar_callback(request: Request, client):
             raise HTTPException(status_code=400, detail="No se pudo obtener el email del proveedor")
 
         return RedirectResponse(
-            url=f"http://localhost:3000/api/auth/callback?email={email}&name={name}&mode={state}"
+            url=f"{config.FRONTEND_URL}/api/auth/callback?email={email}&name={name}&mode={state}"
         )
     except Exception as e:
-        return RedirectResponse(url="http://localhost:3000/login?status=error")
+        return RedirectResponse(url=f"{config.FRONTEND_URL}/login?status=error")

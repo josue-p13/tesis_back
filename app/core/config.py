@@ -39,15 +39,20 @@ class Configuracion:
     # Validación y similitud
     SIMILITUD_TITULO_THRESHOLD = float(os.getenv("SIMILITUD_TITULO_THRESHOLD", "0.85"))
 
+    # ── URLs de producción y desarrollo ──
+    FRONTEND_URL = os.getenv("FRONTEND_URL", "http://localhost:3000")
+    BACKEND_URL = os.getenv("BACKEND_URL", "http://localhost:8000")
+
     # ── Google OAuth ──
     GOOGLE_CLIENT_ID = os.getenv("GOOGLE_CLIENT_ID", "")
     GOOGLE_CLIENT_SECRET = os.getenv("GOOGLE_CLIENT_SECRET", "")
-    OAUTH_REDIRECT_URI = os.getenv("OAUTH_REDIRECT_URI", "http://localhost:8000/auth/callback")
+    OAUTH_REDIRECT_URI = os.getenv("OAUTH_REDIRECT_URI") or f"{BACKEND_URL}/auth/callback"
     SECRET_KEY = os.getenv("SECRET_KEY")
 
     # ── Microsoft OAuth ──
     MS_CLIENT_ID = os.getenv("MS_CLIENT_ID", "")
     MS_CLIENT_SECRET = os.getenv("MS_CLIENT_SECRET", "")
     MS_TENANT_ID = os.getenv("MS_TENANT_ID", "common")
+    MS_OAUTH_REDIRECT_URI = os.getenv("MS_OAUTH_REDIRECT_URI") or f"{BACKEND_URL}/auth/microsoft/callback"
 
 config = Configuracion()
