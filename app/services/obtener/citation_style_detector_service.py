@@ -3,34 +3,6 @@ from typing import List, Dict, Any
 from collections import defaultdict
 
 
-# ──────────────────────────────────────────────────────────────────────────────
-# Patrones ACM (Association for Computing Machinery)
-#
-# Formato ACM estándar:
-#   [1] Lastname, F., Lastname2, F2., and Lastname3, F3. Year. Title of article.
-#       Journal/Conf Name vol, issue (Month Year), pages. DOI
-#
-# Diferencia clave con IEEE (también usa corchetes):
-#   - ACM: "[1] Smith, J., Jones, A. 2020. Title..." — Apellido, Inicial. INVERTIDO + año suelto
-#   - IEEE: "[1] J. Smith, A. Jones, \"Title...\"" — Inicial. Apellido NO invertido + título entre comillas
-#
-# Señales muy fuertes (peso 4):
-#   1. DOI con prefijo 10.1145 — identificador exclusivo de ACM Digital Library
-#
-# Señales fuertes (peso 3):
-#   2. Corchete + Apellido, Inicial. — nombre invertido con coma (diferencia con IEEE)
-#   3. Año suelto (sin paréntesis) después de autores: "Smith, J. 2020. Title"
-#   4. Formato de volumen ACM: "vol, issue (Mes Año), páginas" — sin "vol." explícito
-#   5. "Article X, Y pages." — formato exclusivo de artículos ACM
-#   6. Revistas/conferencias ACM conocidas: "Commun. ACM", "ACM Trans.", etc.
-#
-# Señales moderadas (peso 2):
-#   7. "In Proceedings of" o "Proc. of" — conferencias ACM
-# ──────────────────────────────────────────────────────────────────────────────
-
-
-
-
 def detectar_estilo_citacion(referencias: List[Dict[str, str]]) -> str:
     """
     Detecta el estilo de citación bibliográfica usando patrones RegEx.
@@ -40,11 +12,8 @@ def detectar_estilo_citacion(referencias: List[Dict[str, str]]) -> str:
 
     Estilos soportados:
     - IEEE: [1], [2], etc. (Inicial. Apellido, título entre comillas)
-    - ACM: [1], [2], etc. (Apellido, Inicial. año suelto, sin comillas en título)
     - Vancouver: numeración, autores Apellido Inicial sin coma, vol:págs
     - APA: (2020). Autor (formato con año entre paréntesis seguido de punto)
-    - Harvard: (2020) sin punto después del año
-    - MLA: Apellido, Nombre. (nombre invertido con punto)
 
     Args:
         referencias: Lista de referencias estructuradas extraídas por GROBID
@@ -61,7 +30,7 @@ def detectar_estilo_citacion(referencias: List[Dict[str, str]]) -> str:
 
 def clasificar_estilo_local(referencias: List[Dict[str, str]]) -> Dict[str, Any]:
     """
-    Clasifica el estilo de citación usando análisis de patrones RegEx ponderados.
+    Clasifica el estilo de citación usando análisis de patrones RegEx ponderados acumulativos (soft-voting).
 
     Args:
         referencias: Lista de referencias estructuradas
@@ -84,78 +53,111 @@ def clasificar_estilo_local(referencias: List[Dict[str, str]]) -> Dict[str, Any]
     if not textos_refs:
         return {'estilo': 'Desconocido', 'confianza': 0}
 
-    patrones = defaultdict(int)
+    votos = defaultdict(float)
 
     for linea in textos_refs:
         linea = linea.strip()
         if not linea:
             continue
 
-        # ── Vancouver ────────────────────────────────────────────────────────
-        vancouver_score = 0
+        score_ieee = 0.0
+        score_apa = 0.0
+        score_vancouver = 0.0
 
-        # Año + punto y coma + volumen + colon: "2015;12:" muy característico
-        if re.search(r'\d{4}\s*;\s*\d+:', linea):
-            vancouver_score += 5
-
-        # Autores formato "Apellido Inicial" sin coma (ej. "Safi N", "Singh L")
-        autores_vancouver = re.findall(r'\b[A-Z][a-z]+\s+[A-Z]{1,3}\b', linea)
-        if len(autores_vancouver) >= 2:
-            vancouver_score += 3
-        elif len(autores_vancouver) == 1:
-            vancouver_score += 2
-
-        # volumen:páginas "12:464-74"
-        if re.search(r'\d+:\s*\d+-\d+\.?', linea):
-            vancouver_score += 2
-
-        # Abreviaturas de revistas médicas
-        if re.search(r'\b(?:N Engl J Med|Lancet|JAMA|BMJ|Ann Intern Med|Nat Rev|Am J|Int J Environ Res Public Health)\b', linea):
-            vancouver_score += 2
-
-        # Número inicial con punto "1. "
-        if re.match(r'^\d+\.\s+', linea):
-            vancouver_score += 1
-
-        if vancouver_score >= 4:
-            patrones['Vancouver'] += vancouver_score
-            continue
-
-
-
-        # ── IEEE ─────────────────────────────────────────────────────────────
+        # ── 1. Indicadores de IEEE ──
+        # Corchete inicial de numeración "[1]" o "[12]"
         if re.match(r'^\[\d+\]', linea):
-            patrones['IEEE'] += 3
-            continue
+            score_ieee += 5.0
+        # Presencia de número entre corchetes en cualquier parte
+        elif re.search(r'\[\d+\]', linea):
+            score_ieee += 2.0
 
-        if re.search(r'\bet al\b.*?,.*?(?:pp\.|vol\.|no\.|IEEE)', linea, re.IGNORECASE):
-            patrones['IEEE'] += 2
-            continue
+        # Presencia de páginas "pp. X-Y"
+        if re.search(r'\bpp\.\s*\d+', linea):
+            score_ieee += 2.0
+        # Presencia de volumen "vol. X"
+        if re.search(r'\bvol\.\s*\d+', linea):
+            score_ieee += 1.5
+        # Presencia de número/edición "no. X"
+        if re.search(r'\bno\.\s*\d+', linea):
+            score_ieee += 1.5
 
-        # IEEE: título entre comillas + año sin paréntesis
-        if re.search(r'"[^"]+",.*?\d{4}', linea) and not re.search(r'\(\d{4}\)', linea):
-            patrones['IEEE'] += 2
-            continue
+        # Título entre comillas (rectas o tipográficas)
+        if re.search(r'["“\'‘].+?["”\'’]', linea):
+            score_ieee += 2.0
 
+        # Autores con iniciales primero (ej: "J. Smith" o "J. N. Smith")
+        if re.search(r'\b[A-Z]\.\s*(?:[A-Z]\.\s*)*[A-Z][a-z]+', linea):
+            score_ieee += 2.0
 
+        # Año de 4 dígitos cerca del final
+        if re.search(r'\b(19\d{2}|20[0-3]\d)\b\.?$', linea):
+            score_ieee += 2.0
 
-        # ── APA ──────────────────────────────────────────────────────────────
-        # (año). con punto — "Smith, J. (2024). Title"
-        if re.search(r'\(\d{4}\)\.\s*', linea):
-            patrones['APA'] += 1
-            continue
+        # ── 2. Indicadores de APA / Harvard ──
+        # Año entre paréntesis (ej: "(2020)")
+        match_anio_parentesis = re.search(r'\((19\d{2}|20[0-3]\d)[a-z]?\)', linea)
+        if match_anio_parentesis:
+            score_apa += 4.0
+            # Año entre paréntesis con punto después "(2020)."
+            if re.search(r'\((19\d{2}|20[0-3]\d)[a-z]?\)\.', linea):
+                score_apa += 2.0
 
+        # Símbolo ampersand "&" para separar autores
+        if '&' in linea:
+            score_apa += 3.0
 
+        # Autores invertidos: Apellido, Inicial. (ej: "Smith, J.")
+        if re.search(r'\b[A-Z][a-zA-Záéíóúüñ\-]+,\s+[A-Z]\.', linea):
+            score_apa += 3.0
 
+        # Volumen(Número) sin punto y coma anterior: ej "12(3)"
+        if re.search(r'\b\d+\(\d+\)', linea) and not re.search(r';\s*\d+', linea):
+            score_apa += 2.0
 
-    if not patrones:
+        # ── 3. Indicadores de Vancouver ──
+        # Año + punto y coma + volumen/edición: "2015;12" o "2015;12(3)"
+        if re.search(r'\b(19\d{2}|20[0-3]\d)\s*;\s*\d+', linea):
+            score_vancouver += 5.0
+            if re.search(r'\b(19\d{2}|20[0-3]\d)\s*;\s*\d+(?:\(\d+\))?\s*:', linea):
+                score_vancouver += 2.0
+
+        # Número inicial con punto "1. " o "1 " al inicio seguido de letra
+        if re.match(r'^\d+\.\s+', linea) or re.match(r'^\d+\s+[A-Z]', linea):
+            score_vancouver += 1.5
+
+        # Volumen y páginas separados por dos puntos: "12:123-145" o "12(3):123-145"
+        if re.search(r'\b\d+(?:\(\d+\))?\s*:\s*\d+-\d+', linea):
+            score_vancouver += 3.0
+
+        # Autores formato Apellido Inicial sin coma (ej: "Smith J", "Jones AB")
+        if re.search(r'\b[A-Z][a-zA-Záéíóúüñ\-]+\s+[A-Z]{1,3}\b', linea):
+            score_vancouver += 2.5
+
+        # Abreviaturas de revistas biomédicas comunes
+        if re.search(r'\b(?:N Engl J Med|Lancet|JAMA|BMJ|Ann Intern Med|Nat Rev|Am J|Int J Environ Res Public Health)\b', linea):
+            score_vancouver += 2.0
+
+        # Sumar los pesos
+        if score_ieee > 0:
+            votos['IEEE'] += score_ieee
+        if score_apa > 0:
+            votos['APA'] += score_apa
+        if score_vancouver > 0:
+            votos['Vancouver'] += score_vancouver
+
+    if not votos:
         return {'estilo': 'Desconocido', 'confianza': 0}
 
-    estilo_detectado = max(patrones.keys(), key=lambda k: patrones[k])
-    coincidencias = patrones[estilo_detectado]
-    total_referencias = len(textos_refs)
+    estilo_detectado = max(votos.keys(), key=lambda k: votos[k])
 
-    confianza = int((coincidencias / total_referencias) * 100) if total_referencias > 0 else 0
+    # Confianza basada en la proporción del ganador frente al total de votos acumulados
+    total_votos = sum(votos.values())
+    confianza = int((votos[estilo_detectado] / total_votos) * 100) if total_votos > 0 else 0
+
+    # Umbral de peso mínimo acumulado para considerar una clasificación válida (ej. al menos 0.5 puntos por referencia promedio)
+    if votos[estilo_detectado] < len(textos_refs) * 0.5:
+        return {'estilo': 'Desconocido', 'confianza': 0}
 
     return {
         'estilo': estilo_detectado,
